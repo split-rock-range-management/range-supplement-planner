@@ -1,0 +1,1401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+<meta name="theme-color" content="#D9D5C7">
+<title>Range supplement planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#D9D5C7; --card:#FFFDF7;
+    --ink:#14120C; --ink-2:#4A463A; --ink-3:#7A7566;
+    --rule:#14120C; --rule-2:#14120C;
+    --cyan:#00A9CE; --marigold:#F2A81D; --tomato:#E8452B; --grape:#6B4C9A;
+    --mint:#2FB37A; --hotpink:#E8478E;
+    --grass:#F2A81D; --filaree:#6B4C9A; --clover:#2FB37A;
+    --green:#1B6B47; --green-tint:#D5EDDF;
+    --dry:#8A5A08; --dry-tint:#FBE6BE;
+    --flag:#A8240F; --flag-tint:#FAD9D2;
+    --sans:"Archivo",system-ui,-apple-system,sans-serif;
+    --disp:"Archivo Black","Archivo",system-ui,sans-serif;
+    --mono:"Space Mono",ui-monospace,SFMono-Regular,monospace;
+    --tap:52px; --sh:5px 5px 0 var(--ink);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;padding:20px 16px 122px;background:var(--paper);color:var(--ink);
+    font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+  .sheet{max-width:660px;margin:0 auto}
+
+  header{background:var(--grape);border:3px solid var(--ink);box-shadow:var(--sh);
+    padding:16px 16px 14px;margin-bottom:22px;position:relative;overflow:hidden}
+  h1{margin:0;font-family:var(--disp);font-size:29px;line-height:1.05;color:#FFFDF7;
+    text-transform:uppercase;letter-spacing:-0.01em}
+  .sub{margin:7px 0 0;font-size:12px;color:#E4DCF2;font-family:var(--mono);letter-spacing:.04em}
+  .chips{display:flex;gap:6px;margin-top:13px}
+  .chips i{display:block;height:11px;border:2px solid var(--ink)}
+  .chips i:nth-child(1){width:34px;background:var(--marigold)}
+  .chips i:nth-child(2){width:20px;background:var(--cyan)}
+  .chips i:nth-child(3){width:44px;background:var(--tomato)}
+  .chips i:nth-child(4){width:16px;background:var(--mint)}
+  .chips i:nth-child(5){width:26px;background:var(--hotpink)}
+
+  .grp{background:var(--card);border:3px solid var(--ink);box-shadow:var(--sh);padding:0 0 16px;margin-bottom:20px}
+  .grp.off{opacity:.45}
+  .grp h3{margin:0 0 14px;font-family:var(--disp);font-size:14px;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--ink);background:var(--marigold);border-bottom:3px solid var(--ink);
+    padding:11px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+  #gLamb h3{background:var(--cyan)} #gForage h3{background:var(--mint)} #gSupp h3{background:var(--hotpink);color:#FFFDF7}
+  #gCalf h3{background:var(--tomato);color:#FFFDF7}
+  .grp h3 span{display:flex;align-items:center;gap:8px;min-width:0}
+  .gtog{appearance:none;flex:0 0 auto;width:54px;height:30px;border:3px solid var(--ink);border-radius:16px;
+    background:var(--card);cursor:pointer;padding:0;position:relative;touch-action:manipulation}
+  .gtog .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+    background:var(--ink);transition:left .12s}
+  .gtog[aria-checked=true]{background:var(--mint)}
+  .gtog[aria-checked=true] .knob{left:28px}
+  #gSupp h3 .gtog,#gCalf h3 .gtog{border-color:#FFFDF7}
+  .grp.paused .rbody,.grp.paused .pair,.grp.paused .seg,.grp.paused select,
+  .grp.paused label,.grp.paused #cmodelbl,.grp.paused #modelbl{opacity:.3;pointer-events:none}
+  .grp>*:not(h3){margin-left:14px;margin-right:14px}
+  label,.lbl span{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);
+    margin-bottom:6px;font-weight:700}
+
+  .stepper{display:flex;align-items:stretch;border:3px solid var(--ink);background:var(--card);box-shadow:3px 3px 0 var(--ink)}
+  .stepper button{appearance:none;border:0;border-right:3px solid var(--ink);background:var(--marigold);color:var(--ink);
+    cursor:pointer;width:var(--tap);min-height:var(--tap);font-size:27px;line-height:1;font-family:var(--disp);
+    display:flex;align-items:center;justify-content:center;flex:0 0 var(--tap);touch-action:manipulation}
+  .stepper button:last-child{border-right:0;border-left:3px solid var(--ink)}
+  .stepper button:active{background:var(--tomato);color:#FFFDF7}
+  .stepper input{flex:1;min-width:0;width:100%;border:0;background:var(--card);text-align:center;
+    font-family:var(--mono);font-size:23px;font-weight:700;color:var(--ink);padding:8px 4px;
+    font-variant-numeric:tabular-nums;-moz-appearance:textfield}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .stepper input:focus{outline:none;background:#FFF3C4}
+
+  select{width:100%;min-height:var(--tap);font-family:var(--sans);font-size:16px;font-weight:600;color:var(--ink);
+    background:var(--card);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);padding:10px 12px;border-radius:0}
+  .pair{display:flex;gap:12px;margin-bottom:16px}
+  .pair>div{flex:1;min-width:0}
+  input:focus-visible,select:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid var(--tomato);outline-offset:2px}
+
+  .seg{display:flex;border:3px solid var(--ink);background:var(--card);box-shadow:3px 3px 0 var(--ink)}
+  .seg button{flex:1;appearance:none;border:0;border-right:3px solid var(--ink);background:transparent;cursor:pointer;
+    min-height:var(--tap);font-family:var(--sans);font-size:15px;font-weight:700;color:var(--ink);
+    padding:10px 4px;touch-action:manipulation;text-transform:uppercase;letter-spacing:.03em}
+  .seg button:last-child{border-right:0}
+  .seg button[aria-pressed=true]{background:var(--tomato);color:#FFFDF7}
+  .modeseg{margin-bottom:22px}
+  .modeseg button{min-height:58px;font-size:17px;font-family:var(--disp)}
+  .modeseg button[aria-pressed=true]{background:var(--grape)}
+
+  .why{appearance:none;border:3px solid var(--ink);background:var(--card);color:var(--ink);cursor:pointer;
+    width:32px;height:32px;flex:0 0 32px;border-radius:50%;font-size:15px;line-height:1;padding:0;
+    font-family:var(--disp);touch-action:manipulation}
+  .why:active{background:var(--tomato);color:#FFFDF7}
+  .field{margin-bottom:16px}
+  .field .lbl{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+  .field .lbl span{margin-bottom:0}
+
+  .chartrow{display:flex;align-items:stretch;border:3px solid var(--ink);background:var(--card);position:relative;overflow:hidden}
+  .yaxis{flex:0 0 42px;display:block;border-right:3px solid var(--ink);background:var(--card)}
+  .chartscroll{flex:1;min-width:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;
+    scrollbar-width:none;touch-action:pan-x;cursor:grab}
+  .chartscroll.grabbing{cursor:grabbing}
+  .chartscroll:focus-visible{outline:3px solid var(--tomato);outline-offset:-3px}
+  .chartscroll::-webkit-scrollbar{display:none}
+  .chartscroll .inner{display:flex}
+  .chartscroll svg{display:block;flex:0 0 auto}
+  .playhead{position:absolute;top:0;bottom:0;left:calc(42px + (100% - 42px)/2);width:0;pointer-events:none;z-index:4;
+    border-left:3px solid var(--tomato)}
+  .playhead b{position:absolute;top:6px;left:50%;transform:translateX(-50%);background:var(--tomato);color:#FFFDF7;
+    border:3px solid var(--ink);font-family:var(--mono);font-size:15px;font-weight:700;padding:3px 8px;white-space:nowrap}
+  .navrow{display:flex;gap:10px;align-items:stretch;margin-top:12px}
+  .navrow button{appearance:none;flex:0 0 56px;background:var(--marigold);border:3px solid var(--ink);
+    box-shadow:3px 3px 0 var(--ink);color:var(--ink);font-family:var(--disp);font-size:20px;line-height:1;
+    cursor:pointer;min-height:46px;touch-action:manipulation}
+  .navrow button:active{background:var(--tomato);color:#FFFDF7}
+  .yearstrip{position:relative;flex:1;min-width:0;height:46px;border:3px solid var(--ink);
+    box-shadow:3px 3px 0 var(--ink);background:var(--card);cursor:pointer;overflow:hidden;touch-action:none}
+  .yearstrip .win{position:absolute;top:0;bottom:0;background:var(--cyan);opacity:.45}
+  .yearstrip .tk{position:absolute;top:0;bottom:0;width:0;border-left:2px solid #BDB7A6}
+  .yearstrip .lb{position:absolute;bottom:3px;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--ink-2)}
+  .yearstrip .mk{position:absolute;top:0;bottom:0;width:0;border-left:4px solid var(--tomato)}
+  .chartlegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12px;font-weight:700;color:var(--ink)}
+  .chartlegend span{display:flex;align-items:center;gap:6px}
+  .chartlegend i{display:block;width:22px;height:0;border-top-width:4px;border-top-style:solid}
+  .scrubhint{font-size:12px;color:var(--ink-2);margin:10px 0 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em}
+
+  .swardwrap{margin:6px 0 0;touch-action:none;user-select:none;-webkit-user-select:none}
+  .swardbar{position:relative;height:58px;border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);background:var(--card)}
+  .swardbar .seg3{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .swardbar .seg3 b{font-family:var(--mono);font-size:15px;font-weight:700;padding:0 4px;white-space:nowrap}
+  .sg{background:var(--grass);left:0} .sg b{color:var(--ink)}
+  .sf{background:var(--filaree)} .sf b{color:#FFFDF7}
+  .sc{background:var(--clover);right:0} .sc b{color:#FFFDF7}
+  .swardbar .hnd{position:absolute;top:-11px;bottom:-11px;width:38px;margin-left:-19px;cursor:ew-resize;
+    display:flex;align-items:center;justify-content:center;touch-action:none;z-index:3}
+  .swardbar .hnd i{display:block;width:14px;height:100%;background:var(--card);border:3px solid var(--ink)}
+  .swardkey{display:flex;gap:14px;margin-top:18px;flex-wrap:wrap;font-size:13px;color:var(--ink);font-weight:600}
+  .swardkey span{display:flex;align-items:center;gap:6px}
+  .swardkey i{width:15px;height:15px;border:2px solid var(--ink);display:block}
+
+  details.asm{background:var(--card);border:3px solid var(--ink);box-shadow:var(--sh);margin-bottom:20px}
+  details.asm summary{cursor:pointer;list-style:none;padding:14px;font-family:var(--disp);font-size:14px;letter-spacing:.05em;
+    text-transform:uppercase;color:var(--ink);background:var(--cyan);display:flex;justify-content:space-between;
+    align-items:center;min-height:var(--tap)}
+  details.asm[open] summary{border-bottom:3px solid var(--ink)}
+  details.asm summary::-webkit-details-marker{display:none}
+  details.asm summary::after{content:"OPEN";font-family:var(--mono);font-size:12px;letter-spacing:.05em}
+  details.asm[open] summary::after{content:"CLOSE"}
+  .asmbody{padding:14px}
+  .asmsec{font-family:var(--disp);font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:#FFFDF7;
+    background:var(--ink);margin:20px -14px 14px;padding:8px 14px}
+  .asmsec:first-child{margin-top:0}
+  .reset{appearance:none;background:var(--marigold);border:3px solid var(--ink);box-shadow:3px 3px 0 var(--ink);
+    color:var(--ink);font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.05em;
+    padding:0 18px;min-height:var(--tap);cursor:pointer;margin-top:18px;width:100%}
+
+  .forage{display:flex;gap:10px;margin:16px 0 4px}
+  .fq{flex:1;background:var(--card);border:3px solid var(--ink);padding:9px 8px 10px;text-align:center}
+  .fq .k{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);margin-bottom:4px;font-weight:700}
+  .fq .v{font-family:var(--mono);font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+
+  .pen{position:relative;margin-bottom:20px;transition:padding .12s}
+  .pen.on{border:4px solid var(--ink);box-shadow:7px 7px 0 var(--grape);background:var(--paper);
+    padding:30px 12px 12px}
+  .pentab{display:none}
+  .pen.on .pentab{display:block;position:absolute;top:-4px;left:-4px;background:var(--grape);color:#FFFDF7;
+    font-family:var(--disp);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+    padding:5px 12px 4px;border:4px solid var(--ink);white-space:nowrap}
+  .pen.on .grp{box-shadow:none}
+  #gEwe{margin-bottom:0}
+  #gLamb{margin-top:0;margin-bottom:0}
+  .pen.on #gLamb{margin-bottom:14px}
+  #gCalf{margin-top:0}
+  .pen:not(.on) #gEwe{margin-bottom:0}
+  .joiner{position:relative;height:84px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:5px;z-index:6}
+  #joinBtn{appearance:none;width:52px;height:52px;border-radius:50%;border:4px solid var(--ink);
+    background:var(--mint);color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;padding:0;touch-action:manipulation}
+  .pen:not(.on) #joinBtn{background:var(--card)}
+  #joinBtn .ic{display:none;line-height:0} #joinBtn .ic.on{display:block}
+  .pen:not(.on) #joinBtn .ic.on{display:none} .pen:not(.on) #joinBtn .ic.off{display:block}
+  .jlabel{font-family:var(--disp);font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--ink-2);white-space:nowrap}
+  .rblock{border:3px solid var(--ink);background:var(--card);margin-bottom:16px}
+  .rblock:last-child{margin-bottom:4px}
+  .rhead{font-family:var(--disp);font-size:13px;letter-spacing:.05em;text-transform:uppercase;
+    background:var(--grape);color:#FFFDF7;padding:9px 12px;border-bottom:3px solid var(--ink);
+    display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .rhead em{font-family:var(--mono);font-style:normal;font-size:12px;color:#DCD3EE;letter-spacing:0}
+  .rbody{padding:12px}
+  .bar{display:flex;height:34px;border:3px solid var(--ink);overflow:hidden;margin-bottom:6px}
+  .bar i{display:block}
+  .bar .a{background:var(--mint)} .bar .g{background:var(--marigold)}
+  .barkey{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;
+    font-weight:700;color:var(--ink);margin-bottom:14px}
+  .rblock .lines td{font-size:14px} .rblock .lines td.n{font-size:19px}
+  .rblock tr.hero td.n{font-size:26px}
+  .out{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--tomato);padding:0 0 18px}
+  .out h2{margin:0 0 16px;font-family:var(--disp);font-size:14px;letter-spacing:.05em;text-transform:uppercase;
+    color:#FFFDF7;background:var(--ink);padding:11px 14px}
+  .out>*:not(h2){margin-left:14px;margin-right:14px}
+  .verdict{padding:13px;font-size:15px;line-height:1.5;margin-bottom:18px;border:3px solid var(--ink)}
+  .v-ok{background:var(--green-tint);color:var(--green)}
+  .v-gap{background:var(--dry-tint);color:var(--dry)}
+  .v-warn{background:var(--flag-tint);color:var(--flag)}
+  .verdict b{font-weight:700}
+  .lines{width:100%;border-collapse:collapse}
+  .lines th{text-align:left;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink);
+    font-weight:700;padding-bottom:8px;border-bottom:3px solid var(--ink)}
+  .lines td{padding:12px 0;border-bottom:2px solid var(--ink);vertical-align:baseline;font-size:15px;font-weight:600}
+  .lines td.n{text-align:right;font-family:var(--mono);font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+  .lines td.u{text-align:right;font-family:var(--mono);font-size:11px;color:var(--ink-2);width:100px;padding-left:8px}
+  tr.hero td{border-bottom:0;padding-top:16px}
+  tr.hero td:first-child{font-family:var(--disp);font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+  tr.hero td.n{font-size:32px;color:var(--tomato)}
+  .note{margin-top:14px;font-size:14px;color:var(--ink-2);line-height:1.55}
+  .flagbox{padding:12px;font-size:14px;line-height:1.5;margin-top:14px;background:var(--flag-tint);
+    border:3px solid var(--ink);color:var(--flag)}
+
+  .dock{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--card);
+    padding:11px 16px calc(11px + env(safe-area-inset-bottom));z-index:40;border-top:4px solid var(--tomato);
+    display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .dock .dk{font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--marigold);font-weight:700}
+  .dock .dv{font-family:var(--mono);font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15}
+  .dock .du{font-size:12px;color:#A9A493;font-family:var(--mono)}
+  .dock .right{text-align:right;flex:0 0 auto}
+  .dockitems{display:flex;gap:20px;flex:1;min-width:0}
+  .dcell{min-width:0}
+  .dockitems.two .dv{font-size:19px}
+  .dockitems.two .du{font-size:11px}
+  .dlines{margin-top:3px}
+  .dlines div{display:flex;align-items:baseline;gap:7px;line-height:1.18}
+  .dlines b{font-family:var(--mono);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;
+    min-width:3.6ch;text-align:right}
+  .dlines span{font-size:12px;color:#A9A493;letter-spacing:.02em}
+  .dlines .hay b{color:var(--marigold)} .dlines .prot b{color:var(--mint)}
+  .dockitems.two .dlines b{font-size:17px;min-width:3.2ch}
+  .dockitems.two .dlines span{font-size:10.5px}
+  .dock .right{max-width:40%}
+  .dock .right .dv{color:var(--cyan)}
+
+  footer{margin-top:22px;font-size:13px;color:var(--ink-2);line-height:1.6;background:var(--card);
+    border:3px solid var(--ink);box-shadow:var(--sh);padding:14px}
+  footer b{color:var(--ink);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+  footer ol{padding-left:18px;margin:10px 0 0}
+  footer li{margin-bottom:7px}
+
+  .scrim{position:fixed;inset:0;background:rgba(20,18,12,.62);display:none;align-items:flex-end;justify-content:center;z-index:60}
+  .scrim.on{display:flex}
+  .modal{background:var(--card);border:4px solid var(--ink);border-bottom:0;max-width:600px;width:100%;
+    max-height:88vh;overflow:auto;padding:20px 18px calc(18px + env(safe-area-inset-bottom))}
+  .modal h4{margin:0 0 6px;font-family:var(--disp);font-size:21px;text-transform:uppercase;line-height:1.1}
+  .modal .eyebrow{font-family:var(--mono);font-size:11px;color:#FFFDF7;background:var(--grape);display:inline-block;
+    text-transform:uppercase;letter-spacing:.09em;margin-bottom:11px;padding:3px 8px;border:2px solid var(--ink)}
+  .modal p{margin:0 0 13px;font-size:15px;line-height:1.62}
+  .modal table{width:100%;border-collapse:collapse;font-size:13px;margin:0 0 13px}
+  .modal th{text-align:left;font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:.08em;
+    padding:5px 8px 5px 0;border-bottom:3px solid var(--ink)}
+  .modal td{padding:6px 8px 6px 0;border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:13px}
+  .modal td:first-child{font-family:var(--sans);font-size:14px;font-weight:600}
+  .modal p.src{font-size:13px;color:var(--ink-2);border-top:3px solid var(--ink);padding-top:12px;margin-top:16px;line-height:1.55}
+  .modal .close{appearance:none;background:var(--tomato);color:#FFFDF7;border:3px solid var(--ink);
+    font-family:var(--disp);font-size:16px;text-transform:uppercase;letter-spacing:.05em;
+    padding:0 20px;min-height:var(--tap);width:100%;cursor:pointer;margin-top:8px}
+  @media (max-width:470px){.pair{flex-direction:column;gap:14px}.forage{gap:8px}.forage .fq{padding:8px 4px}.forage .fq .v{font-size:18px}}
+</style>
+</head>
+<body>
+<div class="sheet">
+<div class="gate" id="gate" hidden>
+  <div class="gatecard">
+    <div class="gatehdr">Range supplement planner</div>
+    <p class="gatep" id="gateMsg">Enter your workspace access code. Everyone on the same code shares one live set of herd numbers.</p>
+    <label for="gateCode">Access code</label>
+    <input id="gateCode" type="text" inputmode="text" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="go" placeholder="workspace code">
+    <button type="button" id="gateGo">Sign in</button>
+    <p class="gateerr" id="gateErr" hidden></p>
+    <p class="gatefoot">Your numbers sync across your own phone and laptop. Another rancher with a different code works with their own data, not yours.</p>
+  </div>
+</div>
+
+
+<header>
+  <h1>Range supplement planner</h1>
+  <p class="sub">california annual rangeland // protein gap + schedule</p>
+  <div class="chips" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="cloudbar" id="cloudbar" hidden><span class="cdot" id="cDot"></span><span id="cStat">Local only</span><button type="button" id="cOut" hidden>Sign out</button></div>
+</header>
+
+<div class="seg modeseg" role="group" aria-label="Situation">
+  <button type="button" id="modeRange" aria-pressed="false">On range</button>
+  <button type="button" id="modeLot" aria-pressed="true">Drylot</button>
+</div>
+
+<div class="pen on" id="pen">
+<div class="pentab" id="penTab">One mob</div>
+<div class="grp" id="gEwe">
+  <h3><span>Mature ewes</span><button type="button" class="gtog" id="tog_gEwe" data-g="gEwe" role="switch" aria-checked="true" aria-label="Include this group in the ration"><span class="knob"></span></button></h3>
+  <div class="pair">
+    <div><label for="eN">Head</label>
+      <div class="stepper"><button type="button" data-t="eN" data-s="-10" aria-label="Fewer">&minus;</button>
+      <input id="eN" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="150">
+      <button type="button" data-t="eN" data-s="10" aria-label="More">+</button></div></div>
+    <div><label for="eW">Weight, lb</label>
+      <div class="stepper"><button type="button" data-t="eW" data-s="-5" aria-label="Lighter">&minus;</button>
+      <input id="eW" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="150">
+      <button type="button" data-t="eW" data-s="5" aria-label="Heavier">+</button></div></div>
+  </div>
+  <label for="eS">Stage</label>
+  <select id="eS">
+    <option value="dry" selected>Dry or early gestation</option>
+    <option value="late">Late gestation, last 6 weeks</option>
+    <option value="lact">Lactating, first 8 weeks</option>
+  </select>
+</div>
+
+<div class="joiner" id="joiner">
+  <button type="button" id="joinBtn" aria-pressed="true" aria-label="Ewes and young stock are fed together. Tap to separate."><span class="ic on"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M9.6 14.4 14.4 9.6"/><path d="M13.2 6.6 15.2 4.6a3.4 3.4 0 0 1 4.8 4.8l-2 2"/><path d="M10.8 17.4 8.8 19.4a3.4 3.4 0 0 1-4.8-4.8l2-2"/></svg></span><span class="ic off"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M14.2 7.6 15.6 6.2a3.4 3.4 0 0 1 4.8 4.8l-1.4 1.4"/><path d="M9.8 16.4 8.4 17.8a3.4 3.4 0 0 1-4.8-4.8l1.4-1.4"/><path d="M12 2.6v2.2M12 19.2v2.2M4.4 8.2 6 9M18 15l1.6.8"/></svg></span></button>
+  <span class="jlabel" id="jLabel">Fed together</span>
+  <button class="why" data-k="join" aria-label="About feeding together" style="position:absolute;top:6px;left:calc(50% + 40px)">?</button>
+</div>
+
+<div class="grp" id="gLamb">
+  <h3><span>Young stock</span><button type="button" class="gtog" id="tog_gLamb" data-g="gLamb" role="switch" aria-checked="true" aria-label="Include this group in the ration"><span class="knob"></span></button></h3>
+  <div class="pair">
+    <div><label for="lN">Head</label>
+      <div class="stepper"><button type="button" data-t="lN" data-s="-10" aria-label="Fewer">&minus;</button>
+      <input id="lN" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="152">
+      <button type="button" data-t="lN" data-s="10" aria-label="More">+</button></div></div>
+    <div><label for="lW">Weight, lb</label>
+      <div class="stepper"><button type="button" data-t="lW" data-s="-5" aria-label="Lighter">&minus;</button>
+      <input id="lW" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="60">
+      <button type="button" data-t="lW" data-s="5" aria-label="Heavier">+</button></div></div>
+  </div>
+  <label id="modelbl">Feeding for</label>
+  <div class="seg" role="group" aria-labelledby="modelbl">
+    <button type="button" id="mGain" aria-pressed="false">Gain</button>
+    <button type="button" id="mMaint" aria-pressed="true">Hold</button>
+  </div>
+</div>
+
+<div class="grp" id="gCalf">
+  <h3><span>Weaned calves <button class="why" data-k="calf" aria-label="About weaned calves">?</button></span><button type="button" class="gtog" id="tog_gCalf" data-g="gCalf" role="switch" aria-checked="true" aria-label="Include this group in the ration"><span class="knob"></span></button></h3>
+  <div class="pair">
+    <div><label for="cN">Head</label>
+      <div class="stepper"><button type="button" data-t="cN" data-s="-10" aria-label="Fewer">&minus;</button>
+      <input id="cN" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="0">
+      <button type="button" data-t="cN" data-s="10" aria-label="More">+</button></div></div>
+    <div><label for="cW">Weight, lb</label>
+      <div class="stepper"><button type="button" data-t="cW" data-s="-25" aria-label="Lighter">&minus;</button>
+      <input id="cW" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="500">
+      <button type="button" data-t="cW" data-s="25" aria-label="Heavier">+</button></div></div>
+  </div>
+  <label id="cmodelbl">Feeding for</label>
+  <div class="seg" role="group" aria-labelledby="cmodelbl">
+    <button type="button" id="cGain" aria-pressed="true">Gain</button>
+    <button type="button" id="cMaint" aria-pressed="false">Background</button>
+  </div>
+</div>
+</div>
+
+<div class="grp" id="gLot">
+  <h3>The base hay <button class="why" data-k="basehay" aria-label="About base hay">?</button></h3>
+  <div class="field"><div class="lbl"><span>Crude protein, % of dry matter</span></div>
+    <div class="stepper"><button type="button" data-t="sLotCp" data-s="-0.5" aria-label="Less">&minus;</button>
+    <input id="sLotCp" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="10.9">
+    <button type="button" data-t="sLotCp" data-s="0.5" aria-label="More">+</button></div></div>
+  <div class="forage">
+    <div class="fq"><div class="k">Base CP</div><div class="v" id="lCP">&mdash;</div></div>
+    <div class="fq"><div class="k">Need</div><div class="v" id="lNeed">&mdash;</div></div>
+    <div class="fq"><div class="k">Gap</div><div class="v" id="lGap">&mdash;</div></div>
+  </div>
+  <p class="note">Enter the tested value for the stack you are feeding from. If you feed several stacks, use the poorest one &mdash; the mob will sort.</p>
+</div>
+
+<div class="grp" id="gForage" style="display:none">
+  <h3>The year <button class="why" data-k="curve" aria-label="About this curve">?</button></h3>
+  <label for="regionSel">Region <button class="why" data-k="region" aria-label="About regions" style="position:relative;top:1px">?</button></label>
+  <select id="regionSel" style="margin-bottom:14px">
+    <option value="ca" selected>California annual (Mediterranean)</option>
+    <option value="sw">Southwest / Great Basin (cool-season + browse)</option>
+    <option value="ngp">Northern Great Plains (cool-season prairie)</option>
+    <option value="sp">Southern Plains (warm-season tallgrass)</option>
+  </select>
+  <p class="note" id="regionSrc" style="margin:-6px 0 4px;font-size:12px"></p>
+
+  <div class="readout">
+    <div><div class="date" id="roDate">Jul 19</div></div>
+    <div class="stg" id="roStage"></div>
+  </div>
+
+  <div class="chartrow" id="chartrow">
+    <svg class="yaxis" viewBox="0 0 42 250" preserveAspectRatio="none" aria-hidden="true"><g id="yLayer"></g></svg>
+    <div class="chartscroll" id="chartscroll" tabindex="0">
+      <div class="inner"><div id="padL" style="flex:0 0 0"></div>
+      <svg id="chart" width="2920" height="250" viewBox="0 0 2920 250" role="img"
+        aria-label="Seasonal diet crude protein across the year with requirement and rumen floor lines">
+        <g id="cLayer"></g></svg>
+      <div id="padR" style="flex:0 0 0"></div></div>
+    </div>
+    <div class="playhead"><b id="phVal">&mdash;</b></div>
+  </div>
+  <div class="navrow">
+    <button type="button" id="navPrev" aria-label="Back two weeks">&#9664;</button>
+    <div class="yearstrip" id="yearstrip" role="slider" tabindex="0" aria-label="Day of year"
+      aria-valuemin="1" aria-valuemax="365" aria-valuenow="200"><div class="win" id="ysWin"></div>
+      <div class="mk" id="ysMk"></div></div>
+    <button type="button" id="navNext" aria-label="Forward two weeks">&#9654;</button>
+  </div>
+  <div class="chartlegend">
+    <span><i style="border-color:#6B4C9A"></i>Diet CP</span>
+    <span><i style="border-color:#14120C;border-top-style:dashed"></i><span id="lgNeed">Need</span></span>
+    <span><i style="border-color:#E8452B;border-top-style:dotted"></i><span id="lgFloor">Rumen floor</span></span>
+  </div>
+  <p class="scrubhint">Drag the chart, tap the arrows, or grab the year bar below.</p>
+
+  <div class="field" style="margin-top:16px"><div class="lbl"><span>Season running late by, weeks</span><button class="why" data-k="offset" aria-label="Season offset">?</button></div>
+    <div class="stepper"><button type="button" data-t="sOff" data-s="-1" aria-label="Earlier">&minus;</button>
+    <input id="sOff" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="0">
+    <button type="button" data-t="sOff" data-s="1" aria-label="Later">+</button></div></div>
+
+  <div id="compWrap"><div class="lbl" style="display:flex;align-items:center;justify-content:space-between;margin:18px 0 8px">
+    <span style="font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500">Composition of the sward</span>
+    <button class="why" data-k="species" aria-label="Why composition matters">?</button></div>
+  <div class="swardwrap">
+    <div class="swardbar" id="swardbar">
+      <div class="seg3 sg" id="segG"><b id="labG">80%</b></div>
+      <div class="seg3 sf" id="segF"><b id="labF">10%</b></div>
+      <div class="seg3 sc" id="segC"><b id="labC">10%</b></div>
+      <div class="hnd" id="hndA" role="slider" tabindex="0" aria-label="Grass to filaree boundary" aria-valuemin="0" aria-valuemax="100" aria-valuenow="80"><i></i></div>
+      <div class="hnd" id="hndB" role="slider" tabindex="0" aria-label="Filaree to clover boundary" aria-valuemin="0" aria-valuemax="100" aria-valuenow="90"><i></i></div>
+    </div>
+    <div class="swardkey">
+      <span><i style="background:var(--grass)"></i>Annual grass</span>
+      <span><i style="background:var(--filaree)"></i>Filaree</span>
+      <span><i style="background:var(--clover)"></i>Clover</span>
+    </div>
+  </div></div>
+
+  <div class="field" style="margin-top:16px"><div class="lbl"><span>Green browse in diet, %</span><button class="why" data-k="browse" aria-label="Browse">?</button></div>
+    <div class="stepper"><button type="button" data-t="sBrw" data-s="-5" aria-label="Less">&minus;</button>
+    <input id="sBrw" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="0">
+    <button type="button" data-t="sBrw" data-s="5" aria-label="More">+</button></div></div>
+
+  <div class="forage">
+    <div class="fq"><div class="k">Diet CP</div><div class="v" id="fCP">&mdash;</div></div>
+    <div class="fq"><div class="k">Diet TDN</div><div class="v" id="fTDN">&mdash;</div></div>
+    <div class="fq"><div class="k">Phos.</div><div class="v" id="fP">&mdash;</div></div>
+  </div>
+  <p class="note" id="compNote"></p>
+</div>
+
+<div class="grp" id="gSupp">
+  <h3>The supplement</h3>
+  <label for="suppType">Product</label>
+  <select id="suppType">
+    <optgroup label="Hay">
+      <option value="alf" selected>Alfalfa hay, premium &mdash; 20% CP</option>
+      <option value="alf17">Alfalfa hay, fair &mdash; 17% CP</option>
+      <option value="mix">Grass / alfalfa mix hay &mdash; 16% CP</option>
+      <option value="ghay">Grass hay, high quality &mdash; 14% CP</option>
+    </optgroup>
+    <optgroup label="Concentrates">
+      <option value="csm">Cottonseed meal &mdash; 41% CP</option>
+      <option value="sbm">Soybean meal &mdash; 48% CP</option>
+      <option value="cube">20% range cubes</option>
+    </optgroup>
+    <optgroup label="Self-fed">
+      <option value="tub">Protein tub, 30%</option>
+      <option value="urea">Urea / NPN block</option>
+    </optgroup>
+  </select>
+  <div id="freqWrap"><div style="height:14px"></div>
+  <div class="lbl" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <span id="freqlbl" style="font-size:12px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-2);font-weight:500">Delivery frequency</span>
+    <button class="why" data-k="freq" aria-label="Frequency science">?</button></div>
+  <div class="seg" role="group" aria-labelledby="freqlbl">
+    <button type="button" class="fq-b" data-d="1" aria-pressed="true">Daily</button>
+    <button type="button" class="fq-b" data-d="2" aria-pressed="false">3&times;/wk</button>
+    <button type="button" class="fq-b" data-d="3.5" aria-pressed="false">2&times;/wk</button>
+    <button type="button" class="fq-b" data-d="7" aria-pressed="false">Weekly</button>
+  </div></div>
+</div>
+
+<details class="asm" id="asm">
+  <summary>Assumptions</summary>
+  <div class="asmbody">
+    <div class="asmsec">Ewes</div>
+    <div class="field"><div class="lbl"><span>Intake, % bodyweight</span><button class="why" data-k="dmi" aria-label="Intake">?</button></div>
+      <div class="stepper"><button type="button" data-t="sEwDmi" data-s="-0.1" aria-label="Less">&minus;</button>
+      <input id="sEwDmi" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="2.0">
+      <button type="button" data-t="sEwDmi" data-s="0.1" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Target CP, %</span><button class="why" data-k="cpreq" aria-label="Requirement">?</button></div>
+      <div class="stepper"><button type="button" data-t="sEwCp" data-s="-0.5" aria-label="Less">&minus;</button>
+      <input id="sEwCp" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="9.0">
+      <button type="button" data-t="sEwCp" data-s="0.5" aria-label="More">+</button></div></div>
+    <div class="asmsec">Young stock</div>
+    <div class="field"><div class="lbl"><span>Intake, % bodyweight</span></div>
+      <div class="stepper"><button type="button" data-t="sLbDmi" data-s="-0.1" aria-label="Less">&minus;</button>
+      <input id="sLbDmi" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="3.0">
+      <button type="button" data-t="sLbDmi" data-s="0.1" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Target CP, %</span></div>
+      <div class="stepper"><button type="button" data-t="sLbCp" data-s="-0.5" aria-label="Less">&minus;</button>
+      <input id="sLbCp" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="9.5">
+      <button type="button" data-t="sLbCp" data-s="0.5" aria-label="More">+</button></div></div>
+    <div class="asmsec">Weaned calves</div>
+    <div class="field"><div class="lbl"><span>Intake, % bodyweight</span></div>
+      <div class="stepper"><button type="button" data-t="sCfDmi" data-s="-0.1" aria-label="Less">&minus;</button>
+      <input id="sCfDmi" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="2.5">
+      <button type="button" data-t="sCfDmi" data-s="0.1" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Target CP, %</span></div>
+      <div class="stepper"><button type="button" data-t="sCfCp" data-s="-0.5" aria-label="Less">&minus;</button>
+      <input id="sCfCp" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="12.0">
+      <button type="button" data-t="sCfCp" data-s="0.5" aria-label="More">+</button></div></div>
+
+    <div class="asmsec">Thresholds and delivery</div>
+    <div class="field"><div class="lbl"><span>Microbial CP floor, %</span><button class="why" data-k="floor" aria-label="Floor">?</button></div>
+      <div class="stepper"><button type="button" data-t="sFloor" data-s="-0.5" aria-label="Less">&minus;</button>
+      <input id="sFloor" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="7.0">
+      <button type="button" data-t="sFloor" data-s="0.5" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Max meal, % bodyweight</span><button class="why" data-k="meal" aria-label="Meal size">?</button></div>
+      <div class="stepper"><button type="button" data-t="sMeal" data-s="-0.1" aria-label="Less">&minus;</button>
+      <input id="sMeal" type="text" inputmode="decimal" autocomplete="off" enterkeyhint="done" value="1.0">
+      <button type="button" data-t="sMeal" data-s="0.1" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Supplement dry matter, %</span></div>
+      <div class="stepper"><button type="button" data-t="sSDM" data-s="-1" aria-label="Less">&minus;</button>
+      <input id="sSDM" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="90">
+      <button type="button" data-t="sSDM" data-s="1" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Bale weight, lb</span></div>
+      <div class="stepper"><button type="button" data-t="sBale" data-s="-5" aria-label="Less">&minus;</button>
+      <input id="sBale" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="110">
+      <button type="button" data-t="sBale" data-s="5" aria-label="More">+</button></div></div>
+    <div class="field"><div class="lbl"><span>Wastage, %</span></div>
+      <div class="stepper"><button type="button" data-t="sWaste" data-s="-1" aria-label="Less">&minus;</button>
+      <input id="sWaste" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="8">
+      <button type="button" data-t="sWaste" data-s="1" aria-label="More">+</button></div></div>
+    <button class="reset" id="reset" type="button">Reset to defaults</button>
+  </div>
+</details>
+
+<div class="out">
+  <h2 id="outTitle">Drylot ration</h2>
+  <div class="verdict" id="verdict"></div>
+  <div id="rations"></div>
+  <p class="note" id="schedNote"></p>
+  <div class="flagbox" id="flag1" hidden></div>
+  <div class="flagbox" id="flag2" hidden></div>
+  <div class="flagbox" id="flag3" hidden></div>
+</div>
+
+<footer>
+  <b>Sources</b>
+  <ol>
+    <li>George, M., G. Nader, N. McDougald, M. Connor, and B. Frost. <i>Annual Rangeland Forage Quality.</i> UC ANR Publication 8022, 2001. Stage tables from Hart, Guilbert &amp; Goss 1932 and Gordon &amp; Sampson 1939.</li>
+    <li>Bentley, J. R., and M. W. Talbot. <i>Efficient use of annual plants on cattle ranges in the California foothills.</i> USDA Circular 870, 1951.</li>
+    <li>Bohnert, D. W., C. S. Schauer, and T. DelCurto. Rumen protein degradability and supplementation frequency in ruminants consuming low-quality forage. <i>J. Anim. Sci.</i> 80:1629&ndash;1637, 2002.</li>
+    <li>Bohnert, D. W., and J. E. Sawyer. <i>Supplementation Strategies for Grazing Beef Cattle.</i> Oregon State University.</li>
+    <li>National Research Council. <i>Nutrient Requirements of Small Ruminants.</i> National Academies Press, 2007.</li>
+  </ol>
+  <br>
+  <b>The curve is interpolated, the tables are measured.</b> Stage values come from published transect data; the mapping of stage onto calendar days is a smoothed North Coast approximation. Override it with the season-offset control and with what you see underfoot.
+</footer>
+</div>
+
+<div class="dock" id="dock">
+  <div class="dockitems" id="dockItems"></div>
+  <div class="right"><div class="dk" id="dockK2">drylot</div><div class="dv" id="dockV2" style="font-size:19px">daily</div></div>
+</div>
+
+<div class="stale" id="stale" hidden><span id="staleMsg"></span><button type="button" id="staleReload">Reload</button></div>
+
+<div class="scrim" id="scrim" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal">
+    <p class="eyebrow" id="mEyebrow"></p>
+    <h4 id="mTitle"></h4>
+    <div id="mBody"></div>
+    <button class="close" id="mClose" type="button">Close</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---- regional forage models ----
+  // CA stage arrays (annual rangeland) — unchanged, the validated default
+  var CA_GCP=[18,15,15,10,6,5,3],  CA_GTDN=[77,74,72,67,61,58,58];
+  var CA_FCP=[27,25,22,16,10,7,5], CA_FTDN=[97,94,91,84,72,69,67];
+  var CA_CCP=[28,27,26,22,19,18,17],CA_CTDN=[91,89,86,80,72,69,67];
+  var CA_PHOS=[0.448,0.422,0.396,0.318,0.240,0.214,0.188];
+
+  // Generic cool-season and warm-season CP-by-maturity ladders (DM basis), 7 stages
+  // early-veg .. dry-leached, from the cited extension ranges
+  var CS_CP=[20,17,14,11,8,6,5];   // cool-season perennial (NGP, Intermountain)
+  var CS_TDN=[72,69,66,62,57,54,52];
+  var WS_CP=[15,13,11,9,7,5,4];    // warm-season perennial (S. Plains tallgrass)
+  var WS_TDN=[70,68,65,61,57,54,52];
+  var GEN_PHOS=[0.30,0.28,0.25,0.21,0.18,0.16,0.14];
+
+  var REGIONS={
+    ca:{name:'California annual (Mediterranean)',
+      grass:CA_GCP,gtdn:CA_GTDN,fil:CA_FCP,ftdn:CA_FTDN,clv:CA_CCP,ctdn:CA_CTDN,phos:CA_PHOS,
+      hasForbs:true,
+      // existing CA curve
+      curve:[[1,0.85,0.4,6],[32,0.95,0.7,6],[60,1.0,1.0,6],[91,1.0,1.7,6],[121,1.0,2.7,6],
+        [141,0.90,3.5,5],[152,0.60,4.0,5],[172,0.15,4.5,5],[182,0.0,5.0,5],[213,0.0,5.0,5.2],
+        [244,0.0,5.0,5.5],[274,0.0,5.0,5.8],[305,0.08,0.0,6.0],[320,0.30,0.1,6.0],
+        [335,0.55,0.2,6.0],[350,0.70,0.3,6.0],[365,0.85,0.4,6.0]],
+      src:'UC ANR 8022 (Hart, Guilbert &amp; Goss 1932; Gordon &amp; Sampson 1939)'},
+    sw:{name:'Southwest / Great Basin (cool-season + browse)',
+      grass:CS_CP,gtdn:CS_TDN,fil:CA_FCP,ftdn:CA_FTDN,clv:CS_CP,ctdn:CS_TDN,phos:GEN_PHOS,
+      hasForbs:false,
+      // bimodal: spring green-up, summer dormancy, weaker monsoon bump, winter dormant
+      curve:[[1,0.1,0.3,6],[46,0.3,0.5,6],[74,0.7,1.0,6],[105,0.95,1.6,5],[135,0.8,2.6,5],
+        [160,0.4,3.6,5],[182,0.1,4.6,5.5],[196,0.05,5.0,5.5],[213,0.25,2.2,5.5],[244,0.4,2.8,5.3],
+        [266,0.2,3.6,5.6],[288,0.05,5.0,5.8],[319,0.05,5.0,6],[350,0.08,0.3,6]],
+      src:'USDA-ARS Great Basin & NRCS Intermountain cool-season ranges'},
+    ngp:{name:'Northern Great Plains (cool-season mixed prairie)',
+      grass:CS_CP,gtdn:CS_TDN,fil:CS_CP,ftdn:CS_TDN,clv:CS_CP,ctdn:CS_TDN,phos:GEN_PHOS,
+      hasForbs:false,
+      // spring+fall quality, summer heat dormancy dip, hard winter dormancy
+      curve:[[1,0.0,5.0,6],[91,0.1,0.6,6],[121,0.7,1.0,5],[140,1.0,1.4,5],[160,0.95,2.2,5],
+        [182,0.8,3.2,5],[205,0.6,3.9,5],[227,0.5,4.3,5.3],[252,0.55,3.6,5.3],[274,0.4,3.0,5.5],
+        [296,0.15,4.2,5.8],[319,0.0,5.0,6],[350,0.0,5.0,6]],
+      src:'NDSU R-1323; SDSU cool-season bulletins; Wyffels et al. 2020 (Montana)'},
+    sp:{name:'Southern Plains (warm-season tallgrass)',
+      grass:WS_CP,gtdn:WS_TDN,fil:WS_CP,ftdn:WS_TDN,clv:WS_CP,ctdn:WS_TDN,phos:GEN_PHOS,
+      hasForbs:false,
+      // warm-season: peak late spring, steep summer decline, winter dormant/standing
+      curve:[[1,0.0,5.0,6],[91,0.15,0.8,6],[121,0.9,1.0,5],[135,1.0,1.4,5],[152,0.95,2.2,5],
+        [174,0.85,3.2,5],[196,0.7,4.0,5],[218,0.5,4.5,5.2],[244,0.3,4.8,5.4],[274,0.1,5.0,5.6],
+        [305,0.0,5.0,5.9],[350,0.0,5.0,6]],
+      src:'OSU Range Cow Research Center (Beck 2026); Lalman OSU Ext.; ISRN 2012 (Ardmore OK)'}
+  };
+  var region='ca';
+  function RG(){return REGIONS[region];}
+  function curGRASS(){return RG().grass;} function curFIL(){return RG().fil;} function curCLV(){return RG().clv;}
+  function curGT(){return RG().gtdn;} function curFT(){return RG().ftdn;} function curCT(){return RG().ctdn;}
+  function curPHOS(){return RG().phos;} function curCURVE(){return RG().curve;}
+  var BROWSE_CP=13, BROWSE_TDN=58;
+  var STAGE=['early vegetative','late vegetative','early flowering','late flowering','mature','dry','dry, leached'];
+  var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var MSTART=[0,31,59,90,120,151,181,212,243,273,304,334];
+
+  // day-of-year breakpoints: [doy, greenFraction, greenStage, residueStage]
+  var CURVE=[[1,0.85,0.4,6],[32,0.95,0.7,6],[60,1.0,1.0,6],[91,1.0,1.7,6],[121,1.0,2.7,6],
+    [141,0.90,3.5,5],[152,0.60,4.0,5],[172,0.15,4.5,5],[182,0.0,5.0,5],[213,0.0,5.0,5.2],
+    [244,0.0,5.0,5.5],[274,0.0,5.0,5.8],[305,0.08,0.0,6.0],[320,0.30,0.1,6.0],
+    [335,0.55,0.2,6.0],[350,0.70,0.3,6.0],[365,0.85,0.4,6.0]];
+
+  var SUPP={
+    alf:{n:'premium alfalfa hay',s:'alfalfa',cp:20,bulk:true,tdn:60},
+    alf17:{n:'fair alfalfa hay',s:'alfalfa',cp:17,bulk:true,tdn:56},
+    mix:{n:'grass/alfalfa mix hay',s:'mix hay',cp:16,bulk:true,tdn:56},
+    ghay:{n:'high-quality grass hay',s:'grass hay',cp:14,bulk:true,tdn:58},
+    csm:{n:'cottonseed meal',s:'CSM',cp:41},sbm:{n:'soybean meal',s:'SBM',cp:48},
+    cube:{n:'20% range cubes',s:'cubes',cp:20},
+    tub:{n:'30% protein tub',s:'tub',cp:30,npn:true,selffeed:true},
+    urea:{n:'urea/NPN block',s:'NPN',cp:100,npn:true,selffeed:true}};
+  var EWE={dry:{dmi:2.0,cp:9.0,n:'dry ewes'},late:{dmi:2.5,cp:10.5,n:'late-gestation ewes'},
+    lact:{dmi:3.3,cp:13.5,n:'lactating ewes'}};
+  var LAMB={gain:{dmi:4.2,cp:14.0,n:'growing lambs'},maint:{dmi:3.0,cp:9.5,n:'held lambs'}};
+  var CALF={gain:{dmi:2.5,cp:12.0,n:'growing calves'},maint:{dmi:2.2,cp:9.0,n:'backgrounding calves'}};
+  var LIM={sBale:[40,1500,0],sLotCp:[3,24,1],eN:[0,9999,0],eW:[40,400,0],lN:[0,9999,0],lW:[15,200,0],cN:[0,9999,0],cW:[300,900,0],sCfDmi:[1.8,3.2,1],sCfCp:[7,16,1],sBrw:[0,60,0],sOff:[-6,6,0],
+    sEwDmi:[1.0,5.0,1],sEwCp:[5,20,1],sLbDmi:[1.5,6.0,1],sLbCp:[6,22,1],sFloor:[0,12,1],
+    sMeal:[0.2,3.0,1],sSDM:[70,100,0],sWaste:[0,50,0]};
+  var D={sBale:110,sLotCp:10.9,eN:150,eW:150,lN:152,lW:60,cN:0,cW:500,sBrw:0,sOff:0,sEwDmi:2.0,sEwCp:9.0,sLbDmi:3.0,sLbCp:9.5,sCfDmi:2.5,sCfCp:12.0,
+    sFloor:7.0,sMeal:1.0,sSDM:90,sWaste:8};
+
+  var BASE_DM=0.90;
+  var active={gEwe:true,gLamb:true,gCalf:true}, lmode='maint', cmode='gain', freq=1, doy=200, hA=80, hB=90, rangeMode=false, joint=true, PXPD=8, syncing=false;
+  var $=function(i){return document.getElementById(i);};
+  function r(x,d){var p=Math.pow(10,d||0);return Math.round(x*p)/p;}
+  function cl(v,a,b){return Math.max(a,Math.min(b,v));}
+  function get(id){var L=LIM[id],v=parseFloat(String($(id).value).replace(/[^0-9.\-]/g,''));
+    if(isNaN(v))v=D[id];return cl(v,L[0],L[1]);}
+  function put(id,v){var L=LIM[id];$(id).value=r(cl(v,L[0],L[1]),L[2]).toFixed(L[2]);}
+  function atStage(a,s){s=cl(s,0,6);var i=Math.floor(s);if(i>=6)return a[6];return a[i]+(a[i+1]-a[i])*(s-i);}
+  function dstr(d){d=((Math.round(d)-1)%365+365)%365+1;var m=11;for(var i=0;i<12;i++){if(d>MSTART[i])m=i;}return MN[m]+' '+(d-MSTART[m]);}
+
+  function model(d){
+    d=((d-1)%365+365)%365+1;
+    var C=curCURVE(); var a=C[0],b=C[C.length-1];
+    for(var i=0;i<C.length-1;i++){if(d>=C[i][0]&&d<=C[i+1][0]){a=C[i];b=C[i+1];break;}}
+    var t=(b[0]===a[0])?0:(d-a[0])/(b[0]-a[0]);
+    return {gf:a[1]+(b[1]-a[1])*t, gs:a[2]+(b[2]-a[2])*t, rs:a[3]+(b[3]-a[3])*t};
+  }
+
+  function comp(){
+    if(!RG().hasForbs) return {g:1,f:0,c:0};
+    var g=hA/100, f=(hB-hA)/100, c=(100-hB)/100;
+    return {g:g,f:f,c:c};
+  }
+  function forageAt(d){
+    var m=model(d-get('sOff')*7), K=comp(), brw=get('sBrw')/100;
+    function mix(GT,FT,CT,s){return K.g*atStage(GT,s)+K.f*atStage(FT,s)+K.c*atStage(CT,s);}
+    var cpG=mix(curGRASS(),curFIL(),curCLV(),m.gs), cpR=mix(curGRASS(),curFIL(),curCLV(),m.rs);
+    var tdG=mix(curGT(),curFT(),curCT(),m.gs), tdR=mix(curGT(),curFT(),curCT(),m.rs);
+    var sCP=m.gf*cpG+(1-m.gf)*cpR, sTDN=m.gf*tdG+(1-m.gf)*tdR;
+    var cp=(1-brw)*sCP+brw*(BROWSE_CP*0.85), tdn=(1-brw)*sTDN+brw*BROWSE_TDN;
+    var es=m.gf>0.5?m.gs:m.rs;
+    return {cp:cp,tdn:tdn,p:atStage(curPHOS(),es),gf:m.gf,gs:m.gs,rs:m.rs,es:es};
+  }
+
+  function req(){
+    var eN=get('eN'),eW=get('eW'),lN=get('lN'),lW=get('lW');
+    var eDM=eN*eW*get('sEwDmi')/100, lDM=lN*lW*get('sLbDmi')/100, t=eDM+lDM;
+    return {eDM:eDM,lDM:lDM,total:t,head:eN+lN,cp:t>0?((eDM*get('sEwCp'))+(lDM*get('sLbCp')))/t:0};
+  }
+
+  var H=250,PT=16,PB=32,CW=2920,VISDAYS=91.3;
+  function px(d){return (d-1)*PXPD;}
+  function py(v){return PT+(1-cl(v,0,30)/30)*(H-PT-PB);}
+
+  function drawAxis(){
+    var s='';
+    for(var v=0;v<=30;v+=10){s+='<text x="34" y="'+(py(v)+6)+'" text-anchor="end" font-size="15" fill="#14120C" '+
+      'font-family="Space Mono" font-weight="700">'+v+'</text>';}
+    s+='<text x="34" y="'+(H-6)+'" text-anchor="end" font-size="11" fill="#4A463A" font-family="Archivo" font-weight="700">%CP</text>';
+    $('yLayer').innerHTML=s;
+  }
+
+  function drawChart(){
+    var R=req(), fl=get('sFloor'), tgt=Math.max(R.cp,fl);
+    var s='';
+    for(var v=0;v<=30;v+=10){s+='<line x1="0" y1="'+py(v)+'" x2="'+CW+'" y2="'+py(v)+'" stroke="#14120C" stroke-width="2"/>';}
+    for(var i=0;i<12;i++){var x=px(MSTART[i]+1);
+      s+='<line x1="'+x+'" y1="'+PT+'" x2="'+x+'" y2="'+(H-PB)+'" stroke="#BDB7A6" stroke-width="2"/>'+
+        '<text x="'+(x+7)+'" y="'+(H-PB+22)+'" font-size="'+(PXPD>5?18:14)+'" fill="#14120C" '+
+        'font-family="Archivo Black" letter-spacing="0.5">'+MN[i].toUpperCase()+'</text>';}
+
+    var pts=[],dfa=[],dfb=[];
+    for(var d=1;d<=365;d+=2){var c=forageAt(d).cp;pts.push(px(d)+','+py(c));
+      if(c<tgt){dfa.push(px(d)+','+py(c));dfb.unshift(px(d)+','+py(tgt));}}
+    if(dfa.length) s+='<polygon points="'+dfa.concat(dfb).join(' ')+'" fill="#E8452B" opacity="0.22"/>';
+    s+='<line x1="0" y1="'+py(fl)+'" x2="'+CW+'" y2="'+py(fl)+'" stroke="#E8452B" stroke-width="4" stroke-dasharray="3 7"/>';
+    s+='<line x1="0" y1="'+py(R.cp)+'" x2="'+CW+'" y2="'+py(R.cp)+'" stroke="#14120C" stroke-width="4" stroke-dasharray="11 7"/>';
+    s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#6B4C9A" stroke-width="6" stroke-linejoin="round"/>';
+    var F=forageAt(doy);
+    s+='<circle cx="'+px(doy)+'" cy="'+py(F.cp)+'" r="11" fill="#FFFDF7" stroke="#14120C" stroke-width="4"/>';
+    $('cLayer').innerHTML=s;
+    $('lgNeed').textContent='Need '+r(R.cp,1)+'%';
+    $('lgFloor').textContent='Floor '+r(fl,1)+'%';
+  }
+
+  function fitPads(){
+    var sc=$('chartscroll'), vw=sc.clientWidth; if(!vw) return;
+    PXPD=vw/VISDAYS; CW=Math.round(365*PXPD);
+    var svg=$('chart');
+    svg.setAttribute('width',CW); svg.setAttribute('height',H);
+    svg.setAttribute('viewBox','0 0 '+CW+' '+H);
+    var half=Math.round(vw/2);
+    $('padL').style.flex='0 0 '+half+'px'; $('padR').style.flex='0 0 '+half+'px';
+    drawChart();
+  }
+  function scrollToDoy(){
+    var sc=$('chartscroll'); if(!sc.clientWidth) return;
+    syncing=true; sc.scrollLeft=px(doy); requestAnimationFrame(function(){syncing=false;});
+  }
+  function doyFromScroll(){
+    var sc=$('chartscroll');
+    return cl(Math.round(sc.scrollLeft/PXPD+1),1,365);
+  }
+
+  function paintSward(){
+    $('segG').style.left='0%'; $('segG').style.width=hA+'%';
+    $('segF').style.left=hA+'%'; $('segF').style.width=(hB-hA)+'%';
+    $('segC').style.left=hB+'%'; $('segC').style.width=(100-hB)+'%';
+    $('labG').textContent=Math.round(hA)+'%';
+    $('labF').textContent=Math.round(hB-hA)+'%';
+    $('labC').textContent=Math.round(100-hB)+'%';
+    $('labF').style.display=(hB-hA)>=9?'':'none';
+    $('labG').style.display=hA>=9?'':'none';
+    $('labC').style.display=(100-hB)>=9?'':'none';
+    $('hndA').style.left=hA+'%'; $('hndB').style.left=hB+'%';
+    $('hndA').setAttribute('aria-valuenow',Math.round(hA));
+    $('hndB').setAttribute('aria-valuenow',Math.round(hB));
+  }
+
+  var NOTES={
+   calf:{eye:'Cattle',t:'Weaned calves',
+    b:'<p>Calves run alongside the sheep in this tool, but the numbers are their own. A 500 lb weaned calf eats about 2.5% of bodyweight in dry matter &mdash; less as a fraction than a lamb, far more in absolute pounds &mdash; and needs roughly 12% crude protein for moderate gain, closer to 9% backgrounding at maintenance. Intake as a share of bodyweight keeps falling as they approach yearling weight.</p>'+
+      '<p><b>Gain</b> targets about 1.5 lb/day, the usual stocker rate. <b>Background</b> holds them cheaply through a feed gap to sell or turn out later &mdash; the cattle equivalent of holding lambs for green-up.</p>'+
+      '<p>The rumen floor applies to calves exactly as it does to sheep: on dry range below 7% CP you are unlocking forage, not just adding protein. The one caution the tool cannot see is that freshly weaned calves are the classic bovine respiratory disease window &mdash; a nutrition plan does not substitute for a weaning and vaccination plan.</p>'+
+      '<p class="src">Intake and protein targets from NASEM 2016, Nutrient Requirements of Beef Cattle, growing-animal tables. Set your own values from a test and your target gain.</p>'},
+   join:{eye:'Setup',t:'Together or separately',
+    b:'<p><b>Fed together</b> sizes one ration for the whole mob, blended to a dry-matter-weighted average requirement. It is the right answer for procurement &mdash; total tonnage is total tonnage.</p>'+
+      '<p><b>Fed separately</b> sizes two rations, each to its own class. Use this when the two groups have meaningfully different needs, because a single blended number is arithmetically correct and biologically misleading.</p>'+
+      '<p>The reason is sorting. Feed a blend to dry ewes and growing lambs at one bunk and the ewes &mdash; bigger, pushier, and needing less &mdash; clean up the protein feed while the lambs that need it stand back. The average is met and neither class is.</p>'+
+      '<p>Rule of thumb: if the two targets differ by more than about two points of crude protein, split them or deliver the protein feed only to the class that needs it. The tool flags this when it applies.</p>'+
+      '<p class="src">Replacement ewe lambs are the usual case for splitting. They are on a breeding-weight deadline, and they are also the group most likely to lose at a shared bunk.</p>'},
+   basehay:{eye:'Drylot',t:'The base hay',
+    b:'<p>In drylot the animals are eating what you put in front of them, so there is no seasonal curve &mdash; there is one number, and it comes from a forage test.</p>'+
+      '<p>The default is 10.9% CP, mid-quality first-cut grass hay. Two things to confirm before trusting it. Labs sometimes report as-fed rather than dry matter, and as-fed reads about a point lower. And a single field is not the ration &mdash; if you feed from several stacks, enter the poorest, because the mob will sort toward the best hay and the tail end will get the rest.</p>'+
+      '<p>This number decides everything downstream. At 10.9% a dry ewe needs no supplement at all; at 8.4% she does. Nothing else in this tool substitutes for testing it.</p>'+
+      '<p class="src">Switch to On range for standing forage, where the seasonal curve applies instead.</p>'},
+   region:{eye:'Forage model',t:'Why four regions',
+    b:'<p>This tool was built and validated for California annual rangeland, where forage is Mediterranean &mdash; green in winter and spring, dead and cured all summer. Most of the Western US runs on the opposite rhythm, so one curve cannot serve all of it.</p>'+
+      '<p>Four regions capture the distinct seasonal phases that actually change the supplement decision:</p>'+
+      '<table><tr><th>Region</th><th>Green</th><th>Deficit</th></tr>'+
+      '<tr><td>California annual</td><td>Dec&ndash;May</td><td>Jun&ndash;Oct (summer)</td></tr>'+
+      '<tr><td>Southwest / Great Basin</td><td>Spring + monsoon</td><td>Midsummer + winter</td></tr>'+
+      '<tr><td>N. Great Plains</td><td>May&ndash;Jun, Sep</td><td>Deep winter</td></tr>'+
+      '<tr><td>Southern Plains</td><td>May&ndash;Jul</td><td>Late summer + winter</td></tr></table>'+
+      '<p>Why not more? Each region needs its own sourced, maturity-indexed forage curve. Splitting finer &mdash; shortgrass vs. midgrass, desert vs. foothill &mdash; would mean interpolating between studies I do not have, which produces a confident-looking line with no data under it. Four is the number the published extension data can actually support. The forb/clover composition bar appears only for California, where the Hart transect gives species-level curves; elsewhere the model runs on a single dominant-grass ladder.</p>'+
+      '<p class="src">Each region cites its own sources on the panel and here. Beyond the Western US &mdash; humid East, the South &mdash; none of these curves apply; test your own forage.</p>'},
+   curve:{eye:'Forage model',t:'Reading the year',
+    b:'<p>The green line is diet crude protein through the year for the sward composition you set below. The dashed black line is what your stock need; the dotted red line is the rumen floor. Shaded area is the deficit window.</p>'+
+      '<p>Two different curves are stacked underneath it. From roughly June through October the animals are eating cured residue that keeps weathering &mdash; grass falls from 5% to 3% as early rains leach it. From November the diet becomes a blend of new green growth and that old residue, weighted by how much green is available, which is why the line climbs steeply rather than jumping.</p>'+
+      '<p>The stage values are measured. The calendar mapping is not &mdash; it is a smoothed North Coast interpretation. Maturity tracks soil moisture, not the date, so use the season-offset control in a year that runs early or late.</p>'+
+      '<table><tr><th>Stage</th><th>Grass</th><th>Filaree</th><th>Clover</th></tr>'+
+      '<tr><td>Early vegetative</td><td>18%</td><td>27%</td><td>28%</td></tr>'+
+      '<tr><td>Late vegetative</td><td>15%</td><td>25%</td><td>27%</td></tr>'+
+      '<tr><td>Early flowering</td><td>15%</td><td>22%</td><td>26%</td></tr>'+
+      '<tr><td>Late flowering</td><td>10%</td><td>16%</td><td>22%</td></tr>'+
+      '<tr><td>Mature</td><td>6%</td><td>10%</td><td>19%</td></tr>'+
+      '<tr><td>Dry</td><td>5%</td><td>7%</td><td>18%</td></tr>'+
+      '<tr><td>Dry, leached</td><td>3%</td><td>5%</td><td>17%</td></tr></table>'+
+      '<p class="src">Hart, Guilbert &amp; Goss 1932, 17 ranches on a transect from Red Bluff to Coalinga; Gordon &amp; Sampson 1939. In UC ANR Publication 8022.</p>'},
+   offset:{eye:'Forage model',t:'Season running late',
+    b:'<p>Shifts the whole curve. In a wet year with late rains, green-up and cure-off both come later and the deficit window is shorter. In a dry year it opens earlier and stays open longer.</p>'+
+      '<p>UC ANR data from the San Joaquin Experimental Range shows the three seasons varying by many weeks between years &mdash; the length of the inadequate-green season in particular depends entirely on when the rains arrive and whether the fall stays warm.</p>'+
+      '<p>This is the control that makes the tool honest. Nothing about California annual range happens on a fixed date.</p>'+
+      '<p class="src">Bentley &amp; Talbot 1951, reproduced in UC ANR 8022 Figure 5.</p>'},
+   species:{eye:'Forage data',t:'Composition beats season',
+    b:'<p>Drag the two handles. Watch the whole curve lift.</p>'+
+      '<p>Annual grass falls to 5% CP when dry and 3% when leached, below where rumen function holds. Bur clover at the same stages holds 18% and 17%. Filaree sits between. A sward that is a quarter clover has no summer protein problem; a pure grass sward has one every year, predictably.</p>'+
+      '<p>UC ANR states it directly: rangelands with high amounts of clover require less supplementation than grass-dominated rangelands, because of higher energy and protein at every stage.</p>'+
+      '<p>Which makes the supplement bill a vegetation-management outcome rather than a purchasing one. Subclover and rose clover follow the same seasonal curve as bur clover.</p>'+
+      '<p class="src">Set this by share of the diet, not ground cover. Sheep select, so their diet usually carries more forb than a step-point transect suggests.</p>'},
+   browse:{eye:'Forage data',t:'Green browse in the diet',
+    b:'<p>Evergreen and riparian browse stays green through the dry season on subsurface water. Blackberry, live oak, coyote brush, poison oak all hold protein when the sward is at 4%.</p>'+
+      '<p>Two things dry residue cannot supply: protein, at roughly 10 to 16% in leaf and growing tip, and carotene. UC ANR notes green foliage from woody plants is a good year-round source, and that vitamin A deficiency is documented in California herds put onto weathered forage.</p>'+
+      '<p>Condensed tannins cut protein availability, so this tool discounts browse CP rather than crediting it fully. The same tannins suppress <i>Haemonchus</i>, worth more than the protein at weaning.</p>'+
+      '<p class="src">Share of dry-matter intake, not share of landscape. Naive lambs browse poorly without experienced animals to learn from.</p>'},
+   freq:{eye:'Delivery',t:'Why infrequent feeding works',
+    b:'<p>The mechanism is nitrogen recycling. Degradable protein is fermented to ammonia, absorbed, converted to urea in the liver, then returned to the rumen in saliva and across the rumen wall over the following days. The animal buffers a pulse and meters it back out.</p>'+
+      '<p>Bohnert and colleagues fed steers on 5% CP forage daily, every third day, or every sixth day and reported similar performance and nitrogen use. Follow-on work found intervals as long as seven days giving results similar to daily.</p>'+
+      '<p><b>Where it stops.</b> Not unanimous. A separate multi-experiment study concluded daily supplementation maximized forage intake and cow performance, with longer intervals increasing winter weight loss through calving &mdash; while noting the differences were not large. Oregon State extension guidance is that smaller, more frequent amounts reduce the risk of depressing forage intake.</p>'+
+      '<p>Four conditions. Forage must be low quality. Supplement must be mostly rumen-degradable protein. It must not be an energy supplement, where large infrequent meals risk acidosis. And animals must not have acute needs.</p>'+
+      '<p class="src">Bohnert, Schauer &amp; DelCurto, J. Anim. Sci. 80:1629, 2002. Bohnert &amp; Sawyer, Oregon State. Done in cattle and wethers; sheep have faster passage, so long intervals are less proven here.</p>'},
+   floor:{eye:'Threshold',t:'The 7% rumen wall',
+    b:'<p>Below roughly 7% CP in the total diet, rumen ammonia falls low enough to limit microbial growth. Fermentation slows, fiber digestion drops, digesta clears more slowly, and voluntary intake falls with it. The animal loses condition on feed she is standing on.</p>'+
+      '<p>On the chart this is the dotted line. Every day the green curve sits under it, you are not merely short of protein &mdash; you are suppressing use of everything else out there.</p>'+
+      '<p>Which is why supplement returns in that window exceed what the protein alone would suggest. You are unlocking forage, not just adding to it.</p>'+
+      '<p class="src">UC ANR 8022 documents the seasonal decline below 7%. Set to zero to disable.</p>'},
+   meal:{eye:'Delivery',t:'Meal size limit',
+    b:'<p>Caps what one animal can eat in a sitting, as a share of bodyweight. Stretching the interval multiplies the meal, and past a point the number stops being a plan and becomes a pile.</p>'+
+      '<p>A 150 lb ewe at 1% is 1.5 lb. Weekly delivery of a 2 lb/day requirement needs 14 lb, which she will not eat and which sorts to whoever is boldest.</p>'+
+      '<p class="src">Practical ceiling, not a physiological constant.</p>'},
+   dmi:{eye:'Animal',t:'Intake as % of bodyweight',
+    b:'<p>Stage moves this more than weight: about 2% for a dry ewe, 2.5% in late gestation as the uterus crowds the rumen, 3.3% or more in early lactation.</p>'+
+      '<p>On range, quality pushes back. High-fiber dry residue clears slowly and physically limits intake, so real intake on gray July feed runs below the table value &mdash; part of why the calculated gap understates the problem.</p>'+
+      '<p class="src">NRC 2007, Table 15-1.</p>'},
+   cpreq:{eye:'Animal',t:'Target crude protein',
+    b:'<p>Dry ewe about 9% of diet dry matter, late gestation 10.5%, early lactation 13.5%, growing lambs 14%. Crude protein is a proxy; NRC 2007 works in metabolizable protein with separate columns by proportion of rumen-undegradable protein.</p>'+
+      '<p>For scale from the California literature: UC ANR cites a 500 lb steer gaining 2.5 lb/day needing about 12.5% CP, a fall-calving cow in the last third of pregnancy 7.5%, and a spring-calving cow three to four months postpartum more than 9%.</p>'+
+      '<p class="src">NRC 2007 Table 15-1; UC ANR 8022 citing NRC 1984.</p>'}
+  };
+
+  var scrim=$('scrim');
+  document.addEventListener('click',function(e){
+    var w=e.target.closest('.why');
+    if(w){var n=NOTES[w.dataset.k];if(n){$('mEyebrow').textContent=n.eye;$('mTitle').textContent=n.t;$('mBody').innerHTML=n.b;scrim.classList.add('on');$('mClose').focus();}return;}
+    var s=e.target.closest('.stepper button');
+    if(s){put(s.dataset.t,get(s.dataset.t)+parseFloat(s.dataset.s));calc();return;}
+    if(e.target===scrim||e.target.id==='mClose')scrim.classList.remove('on');
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')scrim.classList.remove('on');});
+
+  // ---- chart navigation ----
+  var sc=$('chartscroll'), ticking=false;
+
+  function setDoy(d,scroll){
+    d=cl(Math.round(d),1,365);
+    if(d===doy && !scroll) return;
+    doy=d; if(scroll) scrollToDoy();
+    calc(true); paintStrip();
+  }
+
+  sc.addEventListener('scroll',function(){
+    if(syncing||ticking)return; ticking=true;
+    requestAnimationFrame(function(){ticking=false;var d=doyFromScroll();
+      if(d!==doy){doy=d;calc(true);paintStrip();}});
+  },{passive:true});
+
+  // drag to pan with a mouse; touch keeps native momentum scrolling
+  var panning=false,panX=0,panL=0;
+  sc.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='touch')return;
+    panning=true;panX=e.clientX;panL=sc.scrollLeft;
+    sc.classList.add('grabbing');
+    try{sc.setPointerCapture(e.pointerId);}catch(err){}
+    e.preventDefault();
+  });
+  sc.addEventListener('pointermove',function(e){
+    if(!panning)return;
+    sc.scrollLeft=panL-(e.clientX-panX);
+  });
+  function endPan(e){if(!panning)return;panning=false;sc.classList.remove('grabbing');
+    try{sc.releasePointerCapture(e.pointerId);}catch(err){}}
+  sc.addEventListener('pointerup',endPan);
+  sc.addEventListener('pointercancel',endPan);
+  sc.addEventListener('pointerleave',endPan);
+  sc.addEventListener('dragstart',function(e){e.preventDefault();});
+
+  // trackpad horizontal swipe, and shift + wheel. plain vertical wheel still scrolls the page.
+  sc.addEventListener('wheel',function(e){
+    var d=0;
+    if(Math.abs(e.deltaX)>Math.abs(e.deltaY))d=e.deltaX;
+    else if(e.shiftKey)d=e.deltaY;
+    if(!d)return;
+    e.preventDefault(); sc.scrollLeft+=d;
+  },{passive:false});
+
+  sc.addEventListener('keydown',function(e){
+    var st=e.shiftKey?30:(e.ctrlKey||e.metaKey?1:7),d=0;
+    if(e.key==='ArrowLeft')d=-st; else if(e.key==='ArrowRight')d=st;
+    else if(e.key==='Home')return setDoy(1,true),e.preventDefault();
+    else if(e.key==='End')return setDoy(365,true),e.preventDefault();
+    else return;
+    e.preventDefault(); setDoy(doy+d,true);
+  });
+
+  $('navPrev').addEventListener('click',function(){setDoy(doy-14,true);});
+  $('navNext').addEventListener('click',function(){setDoy(doy+14,true);});
+
+  // year overview strip
+  var ys=$('yearstrip'),ysDrag=false;
+  function stripInit(){
+    var s='';
+    for(var i=0;i<12;i++){var p=MSTART[i]/365*100;
+      s+='<div class="tk" style="left:'+p+'%"></div>'+
+         '<div class="lb" style="left:calc('+p+'% + 4px)">'+MN[i].charAt(0)+'</div>';}
+    ys.insertAdjacentHTML('afterbegin',s);
+  }
+  function paintStrip(){
+    var half=VISDAYS/2;
+    $('ysWin').style.left=cl((doy-half)/365*100,0,100)+'%';
+    $('ysWin').style.width=cl(VISDAYS/365*100,0,100)+'%';
+    $('ysMk').style.left=(doy/365*100)+'%';
+    ys.setAttribute('aria-valuenow',doy);
+    ys.setAttribute('aria-valuetext',dstr(doy));
+  }
+  function stripSet(e){var rc=ys.getBoundingClientRect();
+    setDoy((e.clientX-rc.left)/rc.width*365,true);}
+  ys.addEventListener('pointerdown',function(e){ysDrag=true;
+    try{ys.setPointerCapture(e.pointerId);}catch(err){}stripSet(e);e.preventDefault();});
+  ys.addEventListener('pointermove',function(e){if(ysDrag)stripSet(e);});
+  ys.addEventListener('pointerup',function(){ysDrag=false;});
+  ys.addEventListener('pointercancel',function(){ysDrag=false;});
+  ys.addEventListener('keydown',function(e){
+    var st=e.shiftKey?30:7,d=0;
+    if(e.key==='ArrowLeft')d=-st; else if(e.key==='ArrowRight')d=st; else return;
+    e.preventDefault(); setDoy(doy+d,true);
+  });
+
+  window.addEventListener('resize',function(){fitPads();scrollToDoy();paintStrip();});
+
+  // sward handles
+  var bar=$('swardbar'), drag=null;
+  function barPct(e){var rc=bar.getBoundingClientRect();return cl((e.clientX-rc.left)/rc.width*100,0,100);}
+  function onDown(which){return function(e){e.preventDefault();drag=which;this.setPointerCapture(e.pointerId);};}
+  function onMove(e){
+    if(!drag)return;
+    var p=barPct(e);
+    if(drag==='A'){hA=cl(p,0,hB);}else{hB=cl(p,hA,100);}
+    paintSward();calc();
+  }
+  $('hndA').addEventListener('pointerdown',onDown('A'));
+  $('hndB').addEventListener('pointerdown',onDown('B'));
+  $('hndA').addEventListener('pointermove',onMove);
+  $('hndB').addEventListener('pointermove',onMove);
+  document.addEventListener('pointerup',function(){drag=null;});
+  function keyH(which){return function(e){
+    var step=(e.shiftKey?10:1), d=0;
+    if(e.key==='ArrowLeft')d=-step; else if(e.key==='ArrowRight')d=step; else return;
+    e.preventDefault();
+    if(which==='A')hA=cl(hA+d,0,hB); else hB=cl(hB+d,hA,100);
+    paintSward();calc();};}
+  $('hndA').addEventListener('keydown',keyH('A'));
+  $('hndB').addEventListener('keydown',keyH('B'));
+
+  function calc(fromScroll){
+    paintSward();
+    var F=rangeMode?forageAt(doy):{cp:get('sLotCp'),tdn:56,p:0.25,gf:0,gs:5,rs:5,es:5};
+    var R=req(), fl=get('sFloor'), tgt=Math.max(R.cp,fl);
+    if(rangeMode && !fromScroll) drawChart();
+    $('phVal').textContent=r(F.cp,1)+'%';
+
+    var pctG=Math.round(F.gf*100);
+    if(rangeMode){
+      $('roDate').textContent=dstr(doy);
+      $('dockK2').textContent=dstr(doy)+' \u00b7 interval';
+      $('roStage').innerHTML=(F.gf>0.05?pctG+'% green, '+STAGE[Math.round(cl(F.gs,0,6))]:'no green feed')+
+        '<br>residue '+STAGE[Math.round(cl(F.rs,0,6))];
+      $('fCP').textContent=r(F.cp,1)+'%';
+      $('fTDN').textContent=r(F.tdn,0)+'%';
+      $('fP').textContent=r(F.p,2)+'%';
+      var K=comp();
+      $('compNote').textContent='Sward is '+Math.round(K.g*100)+'% grass, '+Math.round(K.f*100)+
+        '% filaree, '+Math.round(K.c*100)+'% clover.';
+      paintStrip();
+    } else {
+      $('dockK2').textContent='drylot \u00b7 interval';
+      $('lCP').textContent=r(F.cp,1)+'%';
+      $('lNeed').textContent=r(tgt,1)+'%';
+      $('lGap').textContent=r(Math.max(0,tgt-F.cp),1)+'%';
+    }
+
+    var sp=SUPP[$('suppType').value], sdm=get('sSDM')/100, waste=get('sWaste')/100;
+    var mealCap=get('sMeal')/100, BALE=get('sBale');
+    var fname={1:'daily',2:'three times a week',3.5:'twice a week',7:'once a week'}[freq];
+    $('dockV2').textContent={1:'daily',2:'3\u00d7 / week',3.5:'2\u00d7 / week',7:'weekly'}[freq];
+
+    var eN=get('eN'),eW=get('eW'),lN=get('lN'),lW=get('lW');
+    $('gEwe').classList.toggle('paused',!active.gEwe);
+    $('gLamb').classList.toggle('paused',!active.gLamb);
+    $('gCalf').classList.toggle('paused',!active.gCalf);
+    $('gEwe').classList.toggle('off',active.gEwe&&eN===0);
+    $('gLamb').classList.toggle('off',active.gLamb&&lN===0);
+    $('gCalf').classList.toggle('off',active.gCalf&&get('cN')===0);
+    paintJoin();
+    var G=[];
+    var cN=get('cN'),cW=get('cW');
+    var onE=active.gEwe&&eN>0, onL=active.gLamb&&lN>0, onC=active.gCalf&&cN>0;
+    if(onE)G.push({nm:EWE[$('eS').value].n,head:eN,wt:eW,dm:eN*eW*get('sEwDmi')/100,cp:get('sEwCp'),trough:eN*1.5,sp:'sheep'});
+    if(onL)G.push({nm:LAMB[lmode].n,head:lN,wt:lW,dm:lN*lW*get('sLbDmi')/100,cp:get('sLbCp'),trough:lN*0.8,sp:'sheep'});
+    if(onC)G.push({nm:CALF[cmode].n,head:cN,wt:cW,dm:cN*cW*get('sCfDmi')/100,cp:get('sCfCp'),trough:cN*2.2,sp:'cattle'});
+
+    if(!G.length){
+      $('rations').innerHTML='';$('dockV').textContent='\u2014';
+      $('verdict').className='verdict v-gap';$('verdict').textContent='Enter head counts above.';
+      $('schedNote').textContent='';[1,2,3].forEach(function(i){$('flag'+i).hidden=true;});return;
+    }
+
+    var mobs;
+    if(joint||G.length===1){
+      var tdm=0,tcp=0,th=0,tt=0,tw=0,nms=[];
+      G.forEach(function(g){tdm+=g.dm;tcp+=g.dm*g.cp;th+=g.head;tt+=g.trough;tw+=g.head*g.wt;nms.push(g.nm);});
+      mobs=[{nm:G.length>1?'Whole mob':G[0].nm,head:th,wt:tw/th,dm:tdm,cp:tcp/tdm,trough:tt,parts:nms}];
+    } else mobs=G.slice();
+
+    var gTot=0,afTot=0,alfTot=0,grsTot=0,html='',dcell=[];
+    mobs.forEach(function(m){
+      var tgt=Math.max(m.cp,fl), gapPct=Math.max(0,tgt-F.cp);
+      // drylot: intake is fixed, the protein feed DISPLACES base hay -> Pearson square.
+      // range: grazed forage stays, the supplement is additive -> deficit / supplement CP.
+      var suppDM,baseAF;
+      if(!rangeMode){
+        var fr=(sp.cp>F.cp)?cl((tgt-F.cp)/(sp.cp-F.cp),0,1):(tgt>F.cp?1:0);
+        suppDM=m.dm*fr; baseAF=(m.dm-suppDM)/sdm;
+      } else {
+        suppDM=gapPct>0?(m.dm*gapPct/100)/(sp.cp/100):0; baseAF=0;
+      }
+      var suppAF=suppDM/sdm;
+      if(baseAF<0)baseAF=0;
+      var perHd=suppAF/m.head, perEv=perHd*freq;
+      gTot+=m.dm*gapPct/100; afTot+=suppAF; alfTot+=suppAF; grsTot+=baseAF;
+      var frac=(suppAF+baseAF)>0?suppAF/(suppAF+baseAF):0, pa=Math.round(frac*100);
+      var mix=m.dm>0?(F.cp*Math.max(0,m.dm-suppDM)+sp.cp*suppDM)/m.dm:0;
+
+      html+='<div class="rblock"><div class="rhead"><span>'+m.nm+'</span><em>'+
+        Math.round(m.head).toLocaleString()+' hd \u00b7 '+r(tgt,1)+'% CP</em></div><div class="rbody">';
+
+      if(!rangeMode){
+        html+='<div class="bar" aria-hidden="true"><i class="a" style="width:'+pa+'%"></i>'+
+              '<i class="g" style="width:'+(100-pa)+'%"></i></div>'+
+              (pa>0?'<div class="barkey"><span>'+pa+'% '+sp.n+'</span><span>'+(100-pa)+'% base hay</span></div>'
+                   :'<div class="barkey"><span>100% base hay &mdash; no protein feed needed</span></div>')+
+          '<table class="lines"><tbody>'+
+          (suppAF>0?'<tr><td>'+sp.n.charAt(0).toUpperCase()+sp.n.slice(1)+'</td><td class="n">'+
+            r(suppAF,0).toLocaleString()+'</td><td class="u">lb/day</td></tr>':'')+
+          '<tr><td>Base hay</td><td class="n">'+r(baseAF,0).toLocaleString()+'</td><td class="u">lb/day</td></tr>'+
+          '<tr><td>Bales'+(suppAF>0?' <span style="font-family:var(--mono);font-size:11px;color:var(--ink-2)">('+
+            r(suppAF/BALE,1)+' + '+r(baseAF/BALE,1)+')</span>':'')+'</td><td class="n">'+
+            r((suppAF+baseAF)/BALE,1)+'</td><td class="u">'+Math.round(BALE)+'-lb</td></tr>'+
+          '<tr class="hero"><td>Feed out, with waste</td><td class="n">'+r((suppAF+baseAF)*(1+waste),0).toLocaleString()+
+            '</td><td class="u">lb/day</td></tr></tbody></table>'+
+          '<p class="note">Blend lands at '+r(mix,1)+'% CP. '+r((suppAF+baseAF)/m.head,1)+
+            ' lb per head per day. Allow '+r(m.trough,0).toLocaleString()+' ft of bunk.</p>';
+      } else {
+        html+='<table class="lines"><tbody>'+
+          '<tr><td>Protein deficit</td><td class="n">'+r(m.dm*gapPct/100,1)+'</td><td class="u">lb CP/day</td></tr>'+
+          '<tr><td>Per head, daily equiv.</td><td class="n">'+r(perHd,2)+'</td><td class="u">lb</td></tr>'+
+          '<tr><td>Per head, per feeding</td><td class="n">'+r(perEv,2)+'</td><td class="u">lb</td></tr>'+
+          '<tr class="hero"><td>Load per feeding</td><td class="n">'+r(suppAF*freq*(1+waste),0).toLocaleString()+
+            '</td><td class="u">lb</td></tr></tbody></table>'+
+          '<p class="note">'+(gapPct>0?r(m.trough,0).toLocaleString()+' ft of trough so everything eats at once.'
+            :'No deficit for this group.')+'</p>';
+      }
+      if(!rangeMode){
+        var L=[{c:'hay',v:r(baseAF*(1+waste),0).toLocaleString(),u:'lb base hay '+r(F.cp,1)+'%'}];
+        if(suppAF>0)L.push({c:'prot',v:r(suppAF*(1+waste),0).toLocaleString(),
+          u:'lb '+sp.s+' '+r(sp.cp,0)+'%'});
+        dcell.push({nm:m.nm,lines:L,d:r((suppAF+baseAF)*(1+waste)/m.head,1)+' lb/head'});
+      } else {
+        if(gapPct>0)dcell.push({nm:m.nm,lines:[{c:'prot',v:r(suppAF*freq*(1+waste),0).toLocaleString(),
+          u:'lb '+sp.s+' '+r(sp.cp,0)+'%'}],
+          d:r(perEv,2)+' lb/head per feeding'});
+        else dcell.push({nm:m.nm,lines:[{c:'hay',v:'0',u:'no supplement'}],d:''});
+      }
+      html+='</div></div>';
+    });
+    $('rations').innerHTML=html;
+
+    var totAF=alfTot+grsTot;
+    var di=$('dockItems'), dh='';
+    dcell.forEach(function(c){
+      var hd=dcell.length>1?c.nm.charAt(0).toUpperCase()+c.nm.slice(1)
+             :(rangeMode?'Load per feeding':'Feed out per day');
+      var ln='';
+      c.lines.forEach(function(x){ln+='<div class="'+x.c+'"><b>'+x.v+'</b><span>'+x.u+'</span></div>';});
+      dh+='<div class="dcell"><div class="dk">'+hd+'</div><div class="dlines">'+ln+'</div>'+
+          (c.d?'<div class="du">'+c.d+'</div>':'')+'</div>';
+    });
+    di.innerHTML=dh;
+    di.className='dockitems'+(dcell.length>1?' two':'');
+    $('dockK2').textContent=rangeMode?dstr(doy):'drylot';
+
+    var wTgt=0,wDM=0;
+    mobs.forEach(function(m){wTgt+=Math.max(m.cp,fl)*m.dm;wDM+=m.dm;});
+    var tgtAll=wTgt/wDM, gapPct=Math.max(0,tgtAll-F.cp);
+
+    var v=$('verdict');
+    if(gapPct<=0){v.className='verdict v-ok';
+      v.innerHTML='<b>'+(rangeMode?'No protein supplement needed.':'Base hay alone covers it.')+'</b> '+
+        (rangeMode?'Diet':'Hay')+' is '+r(F.cp,1)+'% CP against '+r(tgtAll,1)+
+        '% required. Adding protein buys nothing &mdash; the surplus leaves as urea.';
+    } else if(F.cp<fl){v.className='verdict v-warn';
+      v.innerHTML='<b>Below the rumen wall.</b> '+(rangeMode?'Diet':'Base hay')+' is '+r(F.cp,1)+'% CP, under the '+
+        r(fl,1)+'% floor. Intake and fiber digestion are both suppressed. Returns here exceed what the protein alone suggests, because you are unlocking the forage.';
+    } else {v.className='verdict v-gap';
+      v.innerHTML='<b>Requirement gap.</b> '+(rangeMode?'Diet':'Base hay')+' is '+r(F.cp,1)+'% CP against '+
+        r(tgtAll,1)+'% needed. Rumen function is intact; this is a production shortfall, not a digestive one.';}
+
+    $('schedNote').textContent = !rangeMode
+      ? (gapPct>0?'Two-forage ration, fed daily. Weekly total '+r(totAF*7*(1+waste),0).toLocaleString()+' lb.'
+                 :'Check minerals and vitamin A separately. Protein adequacy is not adequacy.')
+      : (gapPct>0?'Feeding '+sp.n+' '+fname+'. Weekly total '+r(afTot*7*(1+waste),0).toLocaleString()+
+          ' lb either way. Frequency buys trips, not feed.'
+        :'Check minerals and vitamin A separately. Protein adequacy is not adequacy.');
+
+    var F2=[];
+    if(joint&&G.length>1){
+      var hi=G[0],lo=G[0];
+      G.forEach(function(g){if(g.cp>hi.cp)hi=g;if(g.cp<lo.cp)lo=g;});
+      if(hi.cp-lo.cp>=2)
+        F2.push('<b>One ration, '+G.length+' requirements.</b> '+hi.nm+' need '+r(hi.cp,1)+'% and '+lo.nm+
+          ' need '+r(lo.cp,1)+'%. Fed together, the '+lo.nm+' out-compete for the protein feed and the '+hi.nm+
+          ' come up short. Tap the link icon to feed the groups separately, or deliver the protein feed only to the group that needs it.'+
+          (G.some(function(g){return g.sp==='cattle';})&&G.some(function(g){return g.sp==='sheep';})
+            ? ' Note too that a protein feed high in copper is fine for calves but a cumulative poison for sheep &mdash; do not free-choice a cattle supplement to a joined mob.'
+            : ''));
+    }
+    if(gapPct>0&&rangeMode&&sp.npn&&freq>1)
+      F2.push('<b>Do not stretch the interval on this product.</b> Non-protein nitrogen has no recycling buffer and a narrow toxicity margin &mdash; a large single dose of urea can kill. NPN is for continuous self-fed intake only.');
+    if(gapPct>0&&rangeMode&&sp.selffeed&&freq>1&&!sp.npn)
+      F2.push('Tubs are self-fed by design, so an interval does not really apply. Set it by how often you replace them, and expect wide variation between individuals.');
+    if(gapPct>0&&rangeMode&&freq>1){var ov=[];
+      mobs.forEach(function(m){
+        var pe=((m.dm*Math.max(0,Math.max(m.cp,fl)-F.cp)/100)/(sp.cp/100)/sdm)/m.head*freq;
+        if(pe>m.wt*mealCap)ov.push(m.nm+' at '+r(pe,1)+' lb against a '+r(m.wt*mealCap,1)+' lb ceiling');});
+      if(ov.length)F2.push('<b>Meal too large.</b> '+ov.join('; ')+'. Shorten the interval or split the mob.');}
+    if(gapPct>0&&rangeMode&&freq>1&&($('eS').value==='lact'||$('eS').value==='late')&&eN>0)
+      F2.push('These ewes are in late gestation or early lactation. The frequency research was on dry, low-demand animals. Wrong class to stretch.');
+    if(gapPct>0&&rangeMode&&freq>1&&lN>0&&lmode==='gain')
+      F2.push('Growing lambs are a poor fit for infrequent delivery: small rumen, fast passage, less recycling buffer. Feed lambs daily even if the ewes go to three times a week.');
+    if(gapPct>0&&sp.bulk&&!rangeMode&&alfTot/(totAF||1)>0.5)
+      F2.push('<b>This is a blend, not a top-dress.</b> The protein hay is over half the ration by weight. Feed it mixed or as its own meal with full bunk space &mdash; at this inclusion rate sorting decides who actually gets the protein.');
+    if(gapPct>0&&sp.bulk&&rangeMode){
+      var dmPct=(afTot*sdm)/wDM*100;
+      if(dmPct>25)F2.push('<b>This is substitution, not supplementation.</b> At '+r(dmPct,0)+
+        '% of total dry matter the hay is replacing grazing rather than adding to it, so the real requirement is higher than shown.');}
+    if(rangeMode&&gapPct>0&&sp.bulk&&F.gf>0.12&&F.gf<0.85&&F.gs<1.2)
+      F2.push('<b>Right tool for this window.</b> Hay supplies the bulk and energy that short green feed cannot, which is the actual constraint in the inadequate-green season.');
+    if(rangeMode&&F.p<0.20)
+      F2.push('Phosphorus is '+r(F.p,2)+'% of dry matter here, below requirement for most classes. Protein will not fix it. UC ANR flags phosphorus, carotene and copper alongside protein as the four nutrients of concern on California annual range.');
+    if(rangeMode&&F.gf>0.12&&F.gf<0.85&&F.gs<1.2)
+      F2.push('<b>Inadequate-green season.</b> Only '+pctG+'% of the diet is green and it is high in protein but short in quantity. Bentley and Talbot named the season for the fact that cattle lose weight on it. The fix is bulk and energy, not protein.');
+
+    for(var i=1;i<=3;i++){var el=$('flag'+i);if(F2[i-1]){el.hidden=false;el.innerHTML=F2[i-1];}else{el.hidden=true;}}
+    if(F2.length>3)$('flag3').innerHTML=F2.slice(2).join('<br><br>');
+  }
+
+  function bindNum(id){var el=$(id);
+    el.addEventListener('focus',function(){el.select();});
+    el.addEventListener('input',calc);
+    el.addEventListener('blur',function(){put(id,get(id));calc();});
+    el.addEventListener('keydown',function(e){if(e.key==='Enter')el.blur();});}
+  for(var k in LIM) bindNum(k);
+
+  function paintJoin(){
+    var na=(active.gEwe&&get('eN')>0?1:0)+(active.gLamb&&get('lN')>0?1:0)+(active.gCalf&&get('cN')>0?1:0);
+    var both=na>=2;
+    $('pen').classList.toggle('on',joint&&both);
+    $('joinBtn').setAttribute('aria-pressed',joint?'true':'false');
+    $('joinBtn').setAttribute('aria-label', joint
+      ? 'Ewes and young stock are fed together. Tap to separate.'
+      : 'Ewes and young stock are fed separately. Tap to join.');
+    $('jLabel').textContent=joint?'Fed together':'Fed separately';
+    $('joiner').style.opacity=both?'1':'.4';
+    $('joinBtn').disabled=!both;
+    $('penTab').textContent='One mob \u00b7 '+Math.round((active.gEwe?get('eN'):0)+(active.gLamb?get('lN'):0)+(active.gCalf?get('cN'):0)).toLocaleString()+' head';
+  }
+  function applyRegion(){
+    var g=RG();
+    $('compWrap').style.display=g.hasForbs?'':'none';
+    $('regionSrc').innerHTML='Source: '+g.src+'.';
+    if(!g.hasForbs){hA=100;hB=100;}else{if(hA===100){hA=80;hB=90;}}
+    paintStrip&&paintStrip();
+  }
+  $('regionSel').addEventListener('change',function(){
+    region=this.value; applyRegion();
+    if(typeof fitPads==='function'){fitPads();scrollToDoy();}
+    calc();
+  });
+  $('joinBtn').addEventListener('click',function(){joint=!joint;paintJoin();calc();});
+  ['gEwe','gLamb','gCalf'].forEach(function(gid){
+    $('tog_'+gid).addEventListener('click',function(){
+      active[gid]=!active[gid];
+      this.setAttribute('aria-checked',active[gid]?'true':'false');
+      this.setAttribute('aria-label',active[gid]?'Group included. Tap to set aside.':'Group set aside. Tap to include.');
+      calc();
+    });
+  });
+  $('suppType').addEventListener('change',calc);
+  $('eS').addEventListener('change',function(){var p=EWE[this.value];put('sEwDmi',p.dmi);put('sEwCp',p.cp);calc();});
+  $('mGain').addEventListener('click',function(){lmode='gain';$('mGain').setAttribute('aria-pressed','true');$('mMaint').setAttribute('aria-pressed','false');put('sLbDmi',4.2);put('sLbCp',14);calc();});
+  $('mMaint').addEventListener('click',function(){lmode='maint';$('mMaint').setAttribute('aria-pressed','true');$('mGain').setAttribute('aria-pressed','false');put('sLbDmi',3.0);put('sLbCp',9.5);calc();});
+  $('cGain').addEventListener('click',function(){cmode='gain';$('cGain').setAttribute('aria-pressed','true');$('cMaint').setAttribute('aria-pressed','false');put('sCfDmi',2.5);put('sCfCp',12.0);calc();});
+  $('cMaint').addEventListener('click',function(){cmode='maint';$('cMaint').setAttribute('aria-pressed','true');$('cGain').setAttribute('aria-pressed','false');put('sCfDmi',2.2);put('sCfCp',9.0);calc();});
+  Array.prototype.forEach.call(document.querySelectorAll('.fq-b'),function(b){
+    b.addEventListener('click',function(){freq=parseFloat(b.dataset.d);
+      Array.prototype.forEach.call(document.querySelectorAll('.fq-b'),function(x){x.setAttribute('aria-pressed',x===b);});calc();});});
+  $('modeRange').addEventListener('click',function(){rangeMode=true;$('modeRange').setAttribute('aria-pressed','true');$('modeLot').setAttribute('aria-pressed','false');$('gForage').style.display='';$('gLot').style.display='none';$('outTitle').textContent='Supplement call';$('gSupp').querySelector('h3').firstChild.textContent='The supplement ';$('freqWrap').style.display='';applyRegion();calc();requestAnimationFrame(function(){fitPads();scrollToDoy();paintStrip();});});
+  $('modeLot').addEventListener('click',function(){rangeMode=false;$('modeLot').setAttribute('aria-pressed','true');$('modeRange').setAttribute('aria-pressed','false');$('gForage').style.display='none';$('gLot').style.display='';$('outTitle').textContent='Drylot ration';$('gSupp').querySelector('h3').firstChild.textContent='The protein feed ';$('freqWrap').style.display='none';calc();});
+  $('reset').addEventListener('click',function(){for(var k in D)put(k,D[k]);hA=80;hB=90;lmode='maint';$('mMaint').setAttribute('aria-pressed','true');$('mGain').setAttribute('aria-pressed','false');$('suppType').value='alf';calc();});
+
+  var now=new Date(); doy=cl(Math.floor((now-new Date(now.getFullYear(),0,0))/86400000),1,365);
+  drawAxis(); stripInit(); paintStrip(); $('outTitle').textContent='Drylot ration';
+  $('gSupp').querySelector('h3').firstChild.textContent='The protein feed ';
+  $('freqWrap').style.display='none'; applyRegion(); paintJoin(); calc();
+
+  // ================= CLOUD SYNC (additive; app works with no backend) =================
+  // Fill CLOUD_SYNC_BASE with your deployed Worker URL. Until then, app runs local-only.
+  var CLOUD_SYNC_BASE = 'https://YOUR-WORKER-SUBDOMAIN.workers.dev';
+  function cloudDeployed(){ return !!(CLOUD_SYNC_BASE && CLOUD_SYNC_BASE.indexOf('YOUR-WORKER-SUBDOMAIN')<0); }
+  function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
+  function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
+  function accessCode(){ return lsGet('rsp.accessCode')||''; }
+  function cloudConfigured(){ return cloudDeployed() && !!accessCode(); }
+
+  var NUMIDS=['sBale','sLotCp','eN','eW','lN','lW','cN','cW','sCfDmi','sCfCp','sBrw','sOff',
+    'sEwDmi','sEwCp','sLbDmi','sLbCp','sFloor','sMeal','sSDM','sWaste'];
+  var SELIDS=['eS','regionSel','suppType'];
+
+  function snapshot(){
+    var o={v:1,num:{},sel:{}};
+    NUMIDS.forEach(function(id){o.num[id]=$(id).value;});
+    SELIDS.forEach(function(id){o.sel[id]=$(id).value;});
+    o.lmode=lmode;o.cmode=cmode;o.freq=freq;o.joint=joint;o.rangeMode=rangeMode;
+    o.hA=hA;o.hB=hB;o.active={gEwe:active.gEwe,gLamb:active.gLamb,gCalf:active.gCalf};
+    return o;
+  }
+  function applyState(o){
+    if(!o||o.v!==1)return;
+    NUMIDS.forEach(function(id){if(o.num&&o.num[id]!=null)$(id).value=o.num[id];});
+    SELIDS.forEach(function(id){if(o.sel&&o.sel[id]!=null)$(id).value=o.sel[id];});
+    if(o.lmode){lmode=o.lmode;$('mGain').setAttribute('aria-pressed',lmode==='gain');$('mMaint').setAttribute('aria-pressed',lmode==='maint');}
+    if(o.cmode){cmode=o.cmode;$('cGain').setAttribute('aria-pressed',cmode==='gain');$('cMaint').setAttribute('aria-pressed',cmode==='maint');}
+    if(o.freq){freq=o.freq;Array.prototype.forEach.call(document.querySelectorAll('.fq-b'),function(b){b.setAttribute('aria-pressed',parseFloat(b.dataset.d)===freq);});}
+    if(typeof o.joint==='boolean')joint=o.joint;
+    if(typeof o.hA==='number')hA=o.hA; if(typeof o.hB==='number')hB=o.hB;
+    if(o.active)active={gEwe:o.active.gEwe!==false,gLamb:o.active.gLamb!==false,gCalf:o.active.gCalf!==false};
+    ['gEwe','gLamb','gCalf'].forEach(function(gid){$('tog_'+gid).setAttribute('aria-checked',active[gid]?'true':'false');});
+    region=$('regionSel').value;
+    if(typeof o.rangeMode==='boolean'){
+      rangeMode=o.rangeMode;
+      $('modeRange').setAttribute('aria-pressed',rangeMode);$('modeLot').setAttribute('aria-pressed',!rangeMode);
+      $('gForage').style.display=rangeMode?'':'none';$('gLot').style.display=rangeMode?'none':'';
+      $('freqWrap').style.display=rangeMode?'':'none';
+      $('gSupp').querySelector('h3').firstChild.textContent=rangeMode?'The supplement ':'The protein feed ';
+      $('outTitle').textContent=rangeMode?'Supplement call':'Drylot ration';
+    }
+    applyRegion(); paintJoin();
+    if(rangeMode){requestAnimationFrame(function(){fitPads();scrollToDoy();calc();});}
+    calc();
+  }
+
+  // ---- cloud status pill ----
+  function setStat(cls,txt){ var dot=$('cDot'); dot.className='cdot'+(cls?' '+cls:''); $('cStat').textContent=txt; }
+
+  // ---- debounced push ----
+  var pushT=null, lastServerStamp=0, applying=false;
+  function localSave(){ lsSet('rsp.state', JSON.stringify(snapshot())); }
+  function schedulePush(){
+    localSave();
+    if(!cloudConfigured())return;
+    if(pushT)clearTimeout(pushT);
+    setStat('sync','Saving…');
+    pushT=setTimeout(pushNow,900);
+  }
+  function pushNow(){
+    if(!cloudConfigured())return;
+    var body={state:snapshot(),updatedBy:(lsGet('rsp.name')||'someone'),updatedAt:Date.now()};
+    fetch(CLOUD_SYNC_BASE+'/state',{method:'PUT',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+accessCode()},
+      body:JSON.stringify(body)})
+    .then(function(r){ if(!r.ok)throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(j){ lastServerStamp=(j&&j.updatedAt)||Date.now(); setStat('ok','Synced'); })
+    .catch(function(e){ setStat('err','Save failed — kept local'); });
+  }
+  function pullNow(initial){
+    if(!cloudConfigured())return Promise.resolve(false);
+    setStat('sync','Loading…');
+    return fetch(CLOUD_SYNC_BASE+'/state',{headers:{'Authorization':'Bearer '+accessCode()}})
+      .then(function(r){ if(r.status===401){throw {code:'auth'};} if(!r.ok)throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){
+        if(j&&j.state){ applying=true; applyState(j.state); applying=false; lastServerStamp=j.updatedAt||0; setStat('ok','Synced'); return true; }
+        setStat('ok','Synced'); return false;
+      })
+      .catch(function(e){ if(e&&e.code==='auth'){ setStat('err','Local only'); throw e; } if(initial)setStat('err','Offline — local copy'); else setStat('err','Sync check failed'); return false; });
+  }
+
+  // ---- staleness check on focus ----
+  function checkStale(){
+    if(!cloudConfigured())return;
+    fetch(CLOUD_SYNC_BASE+'/stamp',{headers:{'Authorization':'Bearer '+accessCode()}})
+      .then(function(r){return r.ok?r.json():null;})
+      .then(function(j){
+        if(j&&j.updatedAt&&j.updatedAt>lastServerStamp+500){
+          $('staleMsg').textContent=(j.updatedBy||'Someone')+' updated this since you loaded.';
+          $('stale').hidden=false;
+        }
+      }).catch(function(){});
+  }
+  document.addEventListener('visibilitychange',function(){ if(!document.hidden)checkStale(); });
+  $('staleReload').addEventListener('click',function(){ $('stale').hidden=true; pullNow(); });
+
+  // ---- sign in / out ----
+  function showGate(msg){ if(msg)$('gateMsg').textContent=msg; $('gate').hidden=false; $('gateCode').focus(); }
+  function hideGate(){ $('gate').hidden=true; }
+  function signOut(bad){
+    try{localStorage.removeItem('rsp.accessCode');}catch(e){}
+    $('cOut').hidden=true; setStat('','Local only');
+    showGate(bad?'That code was not recognized. Check it and try again.':
+                 'Enter your workspace access code. Everyone on the same code shares one live set of herd numbers.');
+  }
+  $('gateGo').addEventListener('click',function(){
+    var c=$('gateCode').value.trim();
+    if(!c){return;}
+    lsSet('rsp.accessCode',c); $('gateErr').hidden=true;
+    pullNow(true).then(function(){ hideGate(); $('cOut').hidden=false; })
+      .catch(function(err){
+        if(err&&err.code==='auth'){
+          try{localStorage.removeItem('rsp.accessCode');}catch(e){}
+          $('gateErr').textContent='That code was not recognized. Check it and try again.';
+          $('gateErr').hidden=false; setStat('err','Local only');
+        }
+      });
+  });
+  $('gateCode').addEventListener('keydown',function(e){ if(e.key==='Enter')$('gateGo').click(); });
+  $('cOut').addEventListener('click',function(){ signOut(false); });
+
+  // ---- wire every input to schedule a push (but not while we're applying remote state) ----
+  function hookSync(){
+    NUMIDS.forEach(function(id){ $(id).addEventListener('input',function(){ if(!applying)schedulePush(); }); });
+    SELIDS.forEach(function(id){ $(id).addEventListener('change',function(){ if(!applying)schedulePush(); }); });
+    ['mGain','mMaint','cGain','cMaint','modeRange','modeLot','joinBtn','tog_gEwe','tog_gLamb','tog_gCalf','reset']
+      .forEach(function(id){ var el=$(id); if(el)el.addEventListener('click',function(){ if(!applying)schedulePush(); }); });
+    Array.prototype.forEach.call(document.querySelectorAll('.fq-b'),function(b){ b.addEventListener('click',function(){ if(!applying)schedulePush(); }); });
+    // stepper +/- buttons already call calc via existing handler; catch them too
+    Array.prototype.forEach.call(document.querySelectorAll('.stepper button'),function(b){ b.addEventListener('click',function(){ if(!applying)schedulePush(); }); });
+    window.addEventListener('beforeunload',localSave);
+  }
+
+  // ---- boot ----
+  function bootSync(){
+    hookSync();
+    if(!cloudDeployed()){
+      // pure local-only mode: restore last local state, no gate, no pill
+      var raw=lsGet('rsp.state'); if(raw){ try{applying=true;applyState(JSON.parse(raw));applying=false;}catch(e){} }
+      return;
+    }
+    $('cloudbar').hidden=false;
+    if(!accessCode()){ showGate(); return; }
+    $('cOut').hidden=false;
+    pullNow(true).then(function(got){
+      if(!got){ var raw=lsGet('rsp.state'); if(raw){ try{applying=true;applyState(JSON.parse(raw));applying=false;}catch(e){} } }
+    }).catch(function(err){ if(err&&err.code==='auth'){ signOut(true); } });
+  }
+  bootSync();
+
+})();
+</script>
+</body>
+</html>
