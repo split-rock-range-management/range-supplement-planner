@@ -1247,7 +1247,7 @@
 
   // ================= CLOUD SYNC (additive; app works with no backend) =================
   // Fill CLOUD_SYNC_BASE with your deployed Worker URL. Until then, app runs local-only.
-  var CLOUD_SYNC_BASE = 'https://YOUR-WORKER-SUBDOMAIN.workers.dev';
+  var CLOUD_SYNC_BASE = 'https://rsp-sync.kylejf.workers.dev';
   function cloudDeployed(){ return !!(CLOUD_SYNC_BASE && CLOUD_SYNC_BASE.indexOf('YOUR-WORKER-SUBDOMAIN')<0); }
   function lsGet(k){ try{return localStorage.getItem(k);}catch(e){return null;} }
   function lsSet(k,v){ try{localStorage.setItem(k,v);}catch(e){} }
